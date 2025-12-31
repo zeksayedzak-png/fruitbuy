@@ -1,212 +1,149 @@
--- Gift System Finder
--- loadstring(game:HttpGet("رابط_هذا_الكود"))()
+-- Blox Fruits Auto Gift Opener
+-- ضع هذا الكود كاملاً في الـ loadstring
 
 local player = game.Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TextService = game:GetService("TextService")
 
--- كلمات البحث عن الهدايا
-local GIFT_KEYWORDS = {
-    "christmas", "xmas", "holiday", "gift",
-    "present", "reward", "claim", "open",
-    "santa", "festive", "winter", "newyear"
-}
+-- إعدادات السكربت
+local AUTO_OPEN = true
+local OPEN_SPEED = 1 -- ثانية بين كل محاولة
 
-local function findGiftSystems()
-    local giftSystems = {}
-    
-    print("🔍 يبحث عن أنظمة الهدايا...")
-    
-    -- البحث في ReplicatedStorage
-    local repStorage = game:GetService("ReplicatedStorage")
-    
-    local function searchInObject(obj, path)
-        for _, child in pairs(obj:GetChildren()) do
-            -- إذا كان RemoteEvent أو RemoteFunction
-            if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") then
-                local lowerName = child.Name:lower()
-                
-                -- تحقق من الكلمات المفتاحية
-                for _, keyword in ipairs(GIFT_KEYWORDS) do
-                    if lowerName:find(keyword) then
-                        table.insert(giftSystems, {
-                            name = child.Name,
-                            type = child.ClassName,
-                            path = path .. child.Name,
-                            object = child
-                        })
-                        break
-                    end
-                end
+-- واجهة الهاتف
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AutoGiftBloxFruits"
+screenGui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0.8, 0, 0.25, 0)
+mainFrame.Position = UDim2.new(0.1, 0, 0.7, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+mainFrame.BorderSizePixel = 2
+mainFrame.BorderColor3 = Color3.fromRGB(0, 100, 150)
+
+local title = Instance.new("TextLabel")
+title.Text = "🎁 AUTO GIFT OPENER"
+title.Size = UDim2.new(1, 0, 0.25, 0)
+title.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Text = "🔍 جاري البحث عن RF/GiftFunction..."
+statusLabel.Size = UDim2.new(1, 0, 0.3, 0)
+statusLabel.Position = UDim2.new(0, 0, 0.25, 0)
+statusLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+statusLabel.TextColor3 = Color3.new(1, 1, 1)
+statusLabel.TextWrapped = true
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Text = "⏸ إيقاف"
+toggleBtn.Size = UDim2.new(0.45, 0, 0.25, 0)
+toggleBtn.Position = UDim2.new(0.025, 0, 0.6, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.TextSize = 16
+
+local infoBtn = Instance.new("TextButton")
+infoBtn.Text = "ℹ️ معلومات"
+infoBtn.Size = UDim2.new(0.45, 0, 0.25, 0)
+infoBtn.Position = UDim2.new(0.525, 0, 0.6, 0)
+infoBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 180)
+infoBtn.TextColor3 = Color3.new(1, 1, 1)
+infoBtn.Font = Enum.Font.SourceSansBold
+infoBtn.TextSize = 16
+
+-- تجميع الواجهة
+title.Parent = mainFrame
+statusLabel.Parent = mainFrame
+toggleBtn.Parent = mainFrame
+infoBtn.Parent = mainFrame
+mainFrame.Parent = screenGui
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- البحث عن الـ GiftFunction
+local giftFunction
+local function findFunction()
+    local modules = ReplicatedStorage:FindFirstChild("Modules")
+    if modules then
+        local net = modules:FindFirstChild("Net")
+        if net then
+            giftFunction = net:FindFirstChild("RF/GiftFunction")
+            if giftFunction then
+                statusLabel.Text = "✅ وجدت RF/GiftFunction!\nجاري فتح الهدايا..."
+                statusLabel.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+                return true
             end
-            
-            -- البحث في الأطفال
-            searchInObject(child, path .. child.Name .. ".")
         end
-    end
-    
-    -- بدء البحث
-    searchInObject(repStorage, "ReplicatedStorage.")
-    
-    -- البحث في RobloxReplicatedStorage أيضًا
-    if game:FindFirstChild("RobloxReplicatedStorage") then
-        searchInObject(game.RobloxReplicatedStorage, "RobloxReplicatedStorage.")
-    end
-    
-    return giftSystems
-end
-
--- عرض النتائج
-local function displayResults(systems)
-    if #systems == 0 then
-        print("❌ لم يتم العثور على أنظمة هدايا")
-        return
-    end
-    
-    print("\n🎁 أنظمة الهدايا الموجودة:")
-    for i, system in ipairs(systems) do
-        print(string.format("%d. %s (%s)", i, system.name, system.type))
-        print("   المسار: " .. system.path)
-    end
-end
-
--- دالة نسخ للحافظة
-local function copyToClipboard(text)
-    if setclipboard then
-        setclipboard(text)
-        return true
-    elseif writeclipboard then
-        writeclipboard(text)
-        return true
     end
     return false
 end
 
--- واجهة موبايل بسيطة
-local function createGiftUI()
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "GiftFinder"
-    screenGui.ResetOnSpawn = false
+-- محاولة فتح الهدايا
+local connection
+local function startAutoOpen()
+    if not giftFunction or not giftFunction:IsA("RemoteFunction") then
+        statusLabel.Text = "❌ RF/GiftFunction غير موجود!"
+        statusLabel.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+        return
+    end
     
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0.9, 0, 0.4, 0)
-    mainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    AUTO_OPEN = true
+    toggleBtn.Text = "⏸ إيقاف"
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
     
-    -- العنوان
-    local title = Instance.new("TextLabel")
-    title.Text = "🎁 Gift System Finder"
-    title.Size = UDim2.new(1, 0, 0.15, 0)
-    title.BackgroundColor3 = Color3.fromRGB(0, 100, 50)
-    title.TextColor3 = Color3.new(1, 1, 1)
-    title.Font = Enum.Font.SourceSansBold
+    if connection then
+        connection:Disconnect()
+    end
     
-    -- زر البحث
-    local searchBtn = Instance.new("TextButton")
-    searchBtn.Text = "🔍 بحث عن الهدايا"
-    searchBtn.Size = UDim2.new(0.9, 0, 0.2, 0)
-    searchBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
-    searchBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-    searchBtn.TextColor3 = Color3.new(1, 1, 1)
-    searchBtn.Font = Enum.Font.SourceSansBold
-    
-    -- زر النسخ الجديد
-    local copyBtn = Instance.new("TextButton")
-    copyBtn.Text = "📋 نسخ النتائج"
-    copyBtn.Size = UDim2.new(0.9, 0, 0.2, 0)
-    copyBtn.Position = UDim2.new(0.05, 0, 0.45, 0)
-    copyBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
-    copyBtn.TextColor3 = Color3.new(1, 1, 1)
-    copyBtn.Font = Enum.Font.SourceSansBold
-    copyBtn.Visible = false
-    
-    -- النتائج
-    local resultLabel = Instance.new("TextLabel")
-    resultLabel.Text = "اضغط للبحث عن أنظمة الهدايا"
-    resultLabel.Size = UDim2.new(0.9, 0, 0.3, 0)
-    resultLabel.Position = UDim2.new(0.05, 0, 0.7, 0)
-    resultLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    resultLabel.TextColor3 = Color3.new(1, 1, 1)
-    resultLabel.TextWrapped = true
-    
-    -- حدث البحث
-    searchBtn.MouseButton1Click:Connect(function()
-        searchBtn.Text = "⏳ جاري البحث..."
-        resultLabel.Text = "🔍 يبحث عن أنظمة الهدايا..."
-        
-        task.spawn(function()
-            local systems = findGiftSystems()
-            
-            if #systems == 0 then
-                resultLabel.Text = "❌ لم يتم العثور على أنظمة هدايا"
-                resultLabel.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-                copyBtn.Visible = false
-            else
-                local text = "✅ وجد " .. #systems .. " نظام:\n\n"
-                for i, system in ipairs(systems) do
-                    if i <= 3 then -- عرض أول 3 فقط
-                        text = text .. i .. ". " .. system.name .. "\n"
-                    end
-                end
-                if #systems > 3 then
-                    text = text .. "... والمزيد في الكونسول"
-                end
-                
-                resultLabel.Text = text
-                resultLabel.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-                copyBtn.Visible = true
-                
-                -- تخزين النتائج للنسخ
-                local copyText = "🎁 أنظمة الهدايا:\n"
-                for i, system in ipairs(systems) do
-                    copyText = copyText .. i .. ". " .. system.name .. " (" .. system.type .. ")\n"
-                    copyText = copyText .. "   المسار: " .. system.path .. "\n\n"
-                end
-                
-                copyBtn.MouseButton1Click:Connect(function()
-                    if copyToClipboard(copyText) then
-                        copyBtn.Text = "✅ تم النسخ!"
-                        task.wait(1)
-                        copyBtn.Text = "📋 نسخ النتائج"
-                    else
-                        copyBtn.Text = "❌ فشل النسخ"
-                        task.wait(1)
-                        copyBtn.Text = "📋 نسخ النتائج"
-                    end
-                end)
-            end
-            
-            searchBtn.Text = "🔍 بحث عن الهدايا"
-        end)
+    connection = RunService.Heartbeat:Connect(function()
+        if AUTO_OPEN then
+            pcall(function()
+                giftFunction:InvokeServer()
+                statusLabel.Text = "🎁 جاري فتح الهدايا..."
+            end)
+            wait(OPEN_SPEED)
+        end
     end)
-    
-    -- التجميع
-    title.Parent = mainFrame
-    searchBtn.Parent = mainFrame
-    copyBtn.Parent = mainFrame
-    resultLabel.Parent = mainFrame
-    mainFrame.Parent = screenGui
-    screenGui.Parent = player.PlayerGui
 end
 
--- البحث التلقائي عند التشغيل
-task.spawn(function()
-    task.wait(2)
-    print("\n🎁 البحث التلقائي عن أنظمة الهدايا...")
-    local systems = findGiftSystems()
-    displayResults(systems)
+local function stopAutoOpen()
+    AUTO_OPEN = false
+    toggleBtn.Text = "▶ تشغيل"
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    if connection then
+        connection:Disconnect()
+    end
+    statusLabel.Text = "⏸ توقف فتح الهدايا"
+end
+
+-- أحداث الأزرار
+toggleBtn.MouseButton1Click:Connect(function()
+    if AUTO_OPEN then
+        stopAutoOpen()
+    else
+        startAutoOpen()
+    end
 end)
 
-createGiftUI()
+infoBtn.MouseButton1Click:Connect(function()
+    statusLabel.Text = "📱 السكربت يعمل على الهاتف\n⚡ فتح الهدايا تلقائياً\n🔄 اضغط التشغيل/الإيقاف"
+    wait(3)
+    if giftFunction then
+        statusLabel.Text = "✅ RF/GiftFunction جاهز!\n🎁 اضغط التشغيل لبدء الفتح"
+    end
+end)
 
-print([[
-    
-🎁 Gift System Finder
-🔍 للبحث عن أنظمة الكريسماس والهدايا
+-- البدء التلقائي
+task.wait(2)
+if findFunction() then
+    startAutoOpen()
+else
+    statusLabel.Text = "❌ لم أجد RF/GiftFunction\n🔍 أعد المحاولة لاحقاً"
+end
 
-الكلمات المفتاحية:
-• Christmas, Xmas, Holiday
-• Gift, Present, Reward
-• Claim, Open, Santa
-• Festive, Winter, NewYear
-
-- تم إضافة زر نسخ النتائج ✓
-]])
+print("🎁 Blox Fruits Auto Gift Opener - جاهز!")
+print("📱 يعمل على الهاتف")
