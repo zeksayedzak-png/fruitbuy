@@ -1,215 +1,217 @@
--- Pet Simulator 99 GOD MODE HACKER
--- FilteringEnabled مفتوح - يعمل على الهاتف
+-- Blox Fruits Mobile Duplication Glitch
+-- يعمل على الهاتف - واجهة صغيرة
 
 local plr = game.Players.LocalPlayer
-local rs = game:GetService("ReplicatedStorage")
-local lp = game:GetService("Players").LocalPlayer
+local gui = plr.PlayerGui
 
--- نجمع كل الريمورتات المهمة
-local remotes = {
-    FakePurchase = rs:WaitForChild("GameEvents"):WaitForChild("Market"):WaitForChild("FakePurchase"),
-    ClaimReward = rs:WaitForChild("GameEvents"):WaitForChild("SeasonPass"):WaitForChild("ClaimSeasonPassReward"),
-    BuyPetEgg = rs:WaitForChild("GameEvents"):WaitForChild("BuyPetEgg"),
-    BuyRebirth = rs:WaitForChild("GameEvents"):WaitForChild("BuyRebirth"),
-    BuyEventStock = rs:WaitForChild("GameEvents"):WaitForChild("BuyEventShopStock")
-}
+-- إيجاد الازرار المهمة
+local inventoryBtn = gui:WaitForChild("Main"):WaitForChild("InventoryButton")
+local dialogueBtn = gui:WaitForChild("Main"):WaitForChild("Dialogue"):WaitForChild("Option3")
+local hotbarBtn = gui:WaitForChild("Backpack"):WaitForChild("Hotbar"):WaitForChild("Container"):WaitForChild("More"):WaitForChild("TextButton")
 
--- واجهة God Mode
+-- حالة التجميد
+local freezeActive = false
+local freezeConnection = nil
+
+-- دالة التجميد
+local function freezeDialogueButton()
+    if freezeActive then return end
+    
+    freezeActive = true
+    print("❄️ زر Dialogue متجمد!")
+    
+    -- حفظ الوضع الأصلي
+    local originalVisible = dialogueBtn.Visible
+    local originalActive = dialogueBtn.Active
+    local originalText = dialogueBtn.Text
+    
+    -- التجميد: جعل الزر غير نشط لكن مرئي
+    dialogueBtn.Active = false
+    dialogueBtn.Text = "⌛ Loading..."
+    
+    freezeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        -- إعادة تعيين الخصائص باستمرار لمنع أي تغيير
+        dialogueBtn.Active = false
+        dialogueBtn.AutoButtonColor = false
+        dialogueBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    end)
+    
+    return {
+        originalVisible = originalVisible,
+        originalActive = originalActive,
+        originalText = originalText
+    }
+end
+
+-- دالة فك التجميد
+local function unfreezeDialogueButton(originalSettings)
+    if not freezeActive then return end
+    
+    freezeActive = false
+    if freezeConnection then
+        freezeConnection:Disconnect()
+        freezeConnection = nil
+    end
+    
+    -- استعادة الإعدادات الأصلية
+    dialogueBtn.Active = originalSettings.originalActive
+    dialogueBtn.AutoButtonColor = true
+    dialogueBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    dialogueBtn.Text = originalSettings.originalText
+    
+    print("✅ تم فك تجميد الزر!")
+end
+
+-- دالة تنفيذ الدوبليكيشن
+local function executeDuplication()
+    print("🚀 بدء عملية الدوبليكيشن...")
+    
+    -- الخطوة 1: تجميد زر Dialogue
+    local originalSettings = freezeDialogueButton()
+    
+    -- الخطوة 2: فتح الإنفنتوري
+    inventoryBtn:Fire("click")
+    task.wait(0.2)
+    
+    -- الخطوة 3: الضغط على زر الهوتبار (إخراج الفاكهة)
+    hotbarBtn:Fire("click")
+    print("🎯 تم إخراج الفاكهة من الهوتبار")
+    
+    -- الخطوة 4: محاولة الدخول بالمزر المجمد
+    for i = 1, 10 do
+        dialogueBtn:Fire("click")
+        task.wait(0.05)
+    end
+    
+    -- الخطوة 5: فك التجميد
+    task.wait(0.5)
+    unfreezeDialogueButton(originalSettings)
+    
+    -- الخطوة 6: التحقق
+    task.wait(1)
+    print("🎉 عملية الدوبليكيشن مكتملة!")
+    print("🔍 تحقق من إن الفاكهة اتكررت!")
+end
+
+-- ============================================
+-- 📱 واجهة الهاتف الصغيرة
+-- ============================================
 local ui = Instance.new("ScreenGui")
-ui.Name = "GOD_MODE_HACKER"
+ui.Name = "DuplicationControl"
 ui.ResetOnSpawn = false
 
+-- الإطار الرئيسي (صغير ومتحرك)
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0.95, 0, 0.6, 0)
-main.Position = UDim2.new(0.025, 0, 0.35, 0)
-main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-main.BorderColor3 = Color3.fromRGB(255, 0, 0)
-main.BorderSizePixel = 3
+main.Size = UDim2.new(0.25, 0, 0.15, 0)
+main.Position = UDim2.new(0.75, 0, 0.05, 0) -- أعلى اليمين
+main.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+main.BackgroundTransparency = 0.2
+main.Active = true
+main.Draggable = true -- قابل للسحب بالإصبع
 
--- العنوان
-local title = Instance.new("TextLabel")
-title.Text = "🔥 GOD MODE ACTIVATED - FilteringEnabled: OFF 🔥"
-title.Size = UDim2.new(1, 0, 0.1, 0)
-title.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-title.TextColor3 = Color3.new(1, 1, 1)
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 18
+-- زر التشغيل/الإيقاف
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleBtn"
+toggleBtn.Text = "▶ تشغيل الدوب"
+toggleBtn.Size = UDim2.new(0.9, 0, 0.6, 0)
+toggleBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.TextScaled = true -- ليناسب الشاشة الصغيرة
 
--- زر الإنفجار
-local nukeBtn = Instance.new("TextButton")
-nukeBtn.Text = "💣 NUKE EVERYTHING (اختراق كامل)"
-nukeBtn.Size = UDim2.new(0.9, 0, 0.15, 0)
-nukeBtn.Position = UDim2.new(0.05, 0, 0.12, 0)
-nukeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-nukeBtn.TextColor3 = Color3.new(1, 1, 1)
-nukeBtn.Font = Enum.Font.SourceSansBold
-
--- زر المال اللانهائي
-local moneyBtn = Instance.new("TextButton")
-moneyBtn.Text = "💰 INFINITE MONEY (مال لا نهائي)"
-moneyBtn.Size = UDim2.new(0.9, 0, 0.15, 0)
-moneyBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
-moneyBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-moneyBtn.TextColor3 = Color3.new(0, 0, 0)
-moneyBtn.Font = Enum.Font.SourceSansBold
-
--- زر البيض
-local eggBtn = Instance.new("TextButton")
-eggBtn.Text = "🥚 UNLIMITED EGGS (بيض لا محدود)"
-eggBtn.Size = UDim2.new(0.9, 0, 0.15, 0)
-eggBtn.Position = UDim2.new(0.05, 0, 0.48, 0)
-eggBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
-eggBtn.TextColor3 = Color3.new(0, 0, 0)
-eggBtn.Font = Enum.Font.SourceSansBold
-
--- زر Season Pass
-local seasonBtn = Instance.new("TextButton")
-seasonBtn.Text = "🎁 MAX SEASON PASS (موسم كامل)"
-seasonBtn.Size = UDim2.new(0.9, 0, 0.15, 0)
-seasonBtn.Position = UDim2.new(0.05, 0, 0.66, 0)
-seasonBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-seasonBtn.TextColor3 = Color3.new(1, 1, 1)
-seasonBtn.Font = Enum.Font.SourceSansBold
-
--- الحالة
+-- مؤشر الحالة
 local status = Instance.new("TextLabel")
-status.Text = "✅ GOD MODE جاهز! FilteringEnabled مفتوح!"
-status.Size = UDim2.new(1, 0, 0.1, 0)
-status.Position = UDim2.new(0, 0, 0.85, 0)
-status.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-status.TextColor3 = Color3.new(0, 255, 0)
-status.TextWrapped = true
+status.Name = "Status"
+status.Text = "🟢 جاهز"
+status.Size = UDim2.new(0.9, 0, 0.3, 0)
+status.Position = UDim2.new(0.05, 0, 0.75, 0)
+status.BackgroundTransparency = 1
+status.TextColor3 = Color3.new(1, 1, 1)
+status.TextScaled = true
+status.Font = Enum.Font.SourceSans
 
--- نضيف للواجهة
-title.Parent = main
-nukeBtn.Parent = main
-moneyBtn.Parent = main
-eggBtn.Parent = main
-seasonBtn.Parent = main
+-- إضافة العناصر
+toggleBtn.Parent = main
 status.Parent = main
 main.Parent = ui
-ui.Parent = plr:WaitForChild("PlayerGui")
+ui.Parent = gui
 
--- دالة NUKE الكاملة
-local function nukeEverything()
-    status.Text = "💣 جاري تدمير كل شيء..."
-    
-    -- 1. مال لا نهائي
-    for i = 1, 100 do
-        pcall(function()
-            remotes.FakePurchase:FireServer("Cash", 9999999, 0)
-            remotes.FakePurchase:FireServer("Gems", 999999, 0)
-            remotes.FakePurchase:FireServer("Tokens", 99999, 0)
+-- حدث زر التشغيل/الإيقاف
+toggleBtn.MouseButton1Click:Connect(function()
+    if toggleBtn.Text == "▶ تشغيل الدوب" then
+        -- وضع التشغيل
+        toggleBtn.Text = "⏸ إيقاف الدوب"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        status.Text = "⚡ جاري التنفيذ..."
+        
+        task.spawn(function()
+            executeDuplication()
+            
+            task.wait(2)
+            toggleBtn.Text = "▶ تشغيل الدوب"
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+            status.Text = "✅ اكتمل!"
+            
+            task.wait(2)
+            status.Text = "🟢 جاهز"
         end)
-        task.wait(0.05)
+    else
+        -- وضع الإيقاف
+        toggleBtn.Text = "▶ تشغيل الدوب"
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        status.Text = "⏹ متوقف"
     end
+end)
+
+-- زر إخفاء/إظهار (للتحكم)
+local hideBtn = Instance.new("TextButton")
+hideBtn.Text = "✖"
+hideBtn.Size = UDim2.new(0.1, 0, 0.15, 0)
+hideBtn.Position = UDim2.new(0.9, 0, 0, 0)
+hideBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+hideBtn.TextColor3 = Color3.new(1, 1, 1)
+hideBtn.Font = Enum.Font.SourceSansBold
+hideBtn.Parent = main
+
+hideBtn.MouseButton1Click:Connect(function()
+    main.Visible = not main.Visible
+end)
+
+-- جعل الواجهة دائماً فوق كل شيء
+local alwaysOnTop = Instance.new("BoolValue")
+alwaysOnTop.Name = "AlwaysOnTop"
+alwaysOnTop.Value = true
+alwaysOnTop.Parent = main
+
+-- ============================================
+-- 📢 رسالة البدء
+-- ============================================
+print([[
     
-    -- 2. كل البيض
-    local eggs = {"MythicalEgg", "HugeEgg", "RainbowEgg", "GoldenEgg", "ExclusiveEgg"}
-    for _, egg in pairs(eggs) do
-        for i = 1, 50 do
-            pcall(function()
-                remotes.BuyPetEgg:FireServer(egg, 99)
-            end)
-            task.wait(0.05)
-        end
-    end
-    
-    -- 3. Season Pass كامل
-    for level = 1, 100 do
-        pcall(function()
-            remotes.ClaimReward:FireServer(level, "Premium")
-            remotes.ClaimReward:FireServer(level, "Free")
-        end)
-        task.wait(0.03)
-    end
-    
-    -- 4. Rebirthات
-    for i = 1, 100 do
-        pcall(function()
-            remotes.BuyRebirth:FireServer()
-        end)
-        task.wait(0.05)
-    end
-    
-    status.Text = "💥 تم تدمير كل شيء! GOD MODE مكتمل!"
+🎮 Blox Fruits Duplication Glitch
+📱 Mobile Version - واجهة صغيرة
+
+🎯 الأزرار المكتشفة:
+1. InventoryButton: فتح الشنطة
+2. Dialogue/Option3: إدخال الفاكهة
+3. Hotbar/More: إخراج الفاكهة
+
+⚡ الاستخدام:
+1. اضغط "تشغيل الدوب"
+2. انتظر اكتمال العملية
+3. تحقق من تكرار الفاكهة
+
+🔄 السحب بالإصبع متاح لتحريك الواجهة
+✖ زر الإخفاء في الأعلى
+
+]])
+
+-- تأكيد أن الازرار موجودة
+if inventoryBtn and dialogueBtn and hotbarBtn then
+    print("✅ جميع الأزرار موجودة!")
+    status.Text = "✅ جاهز - كل الأزرار OK"
+else
+    print("⚠️ بعض الأزرار مفقودة!")
+    status.Text = "⚠️ أزرار مفقودة!"
 end
-
--- دالة المال اللانهائي
-local function infiniteMoney()
-    status.Text = "💰 جاري إضافة مال لا نهائي..."
-    
-    local moneyTypes = {
-        {"Cash", 9999999},
-        {"Gems", 999999},
-        {"Tokens", 99999},
-        {"Diamonds", 9999},
-        {"RainbowCoins", 999}
-    }
-    
-    for _, money in pairs(moneyTypes) do
-        for i = 1, 20 do
-            pcall(function()
-                remotes.FakePurchase:FireServer(money[1], money[2], 0)
-            end)
-            task.wait(0.1)
-        end
-    end
-    
-    status.Text = "✅ مال لا نهائي مكتمل!"
-end
-
--- دالة البيض اللانهائي
-local function unlimitedEggs()
-    status.Text = "🥚 جاري إضافة بيض لا محدود..."
-    
-    local eggList = {
-        "MythicalEgg", "HugeEgg", "RainbowEgg", "GoldenEgg",
-        "ExclusiveEgg", "LegendaryEgg", "EpicEgg", "RareEgg"
-    }
-    
-    for _, egg in pairs(eggList) do
-        for i = 1, 30 do
-            pcall(function()
-                remotes.BuyPetEgg:FireServer(egg, 50)
-            end)
-            task.wait(0.08)
-        end
-    end
-    
-    status.Text = "✅ بيض لا محدود مكتمل!"
-end
-
--- دالة Season Pass كامل
-local function maxSeasonPass()
-    status.Text = "🎁 جاري فتح Season Pass كامل..."
-    
-    for level = 1, 100 do
-        for _, rewardType in pairs({"Premium", "Free", "Bonus", "Special"}) do
-            pcall(function()
-                remotes.ClaimReward:FireServer(level, rewardType)
-            end)
-        end
-        task.wait(0.05)
-    end
-    
-    status.Text = "✅ Season Pass كامل مكتمل!"
-end
-
--- أحداث الأزرار
-nukeBtn.MouseButton1Click:Connect(nukeEverything)
-moneyBtn.MouseButton1Click:Connect(infiniteMoney)
-eggBtn.MouseButton1Click:Connect(unlimitedEggs)
-seasonBtn.MouseButton1Click:Connect(maxSeasonPass)
-
-print("===========================================")
-print("🔥 GOD MODE ACTIVATED - FilteringEnabled: OFF")
-print("💣 NUKE EVERYTHING - اختراق كامل")
-print("💰 INFINITE MONEY - مال لا نهائي")
-print("🥚 UNLIMITED EGGS - بيض لا محدود")
-print("🎁 MAX SEASON PASS - موسم كامل")
-print("===========================================")
-
--- بداية تلقائية
-task.wait(2)
-status.Text = "⚡ اضغط أي زر للبدء! FilteringEnabled مفتوح!"
