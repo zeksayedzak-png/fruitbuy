@@ -1,295 +1,285 @@
--- 🎯 BLOX FRUITS DEALER HACK
+-- 🎯 FRUIT DEALER RANDOM HACK
 -- loadstring(game:HttpGet("رابط_هذا_الكود"))()
 
 local player = game.Players.LocalPlayer
-local dealerRemote = game:GetService("ReplicatedStorage").Modules.Net.RE.ShopNetwork
+local MarketplaceService = game:GetService("MarketplaceService")
 
--- 📋 الفواكه المتاحة في Blox Fruits
-local FRUITS = {
-    "Bomb-Bomb",
-    "Spike-Spike", 
-    "Chop-Chop",
-    "Spring-Spring",
-    "Kilo-Kilo",
-    "Spin-Spin",
-    "Dark-Dark",
-    "Diamond-Diamond",
-    "Flame-Flame",
-    "Ice-Ice",
-    "Sand-Sand",
-    "Light-Light",
-    "Rubber-Rubber",
-    "Barrier-Barrier",
-    "Ghost-Ghost",
-    "Magma-Magma",
-    "Quake-Quake",
-    "String-String",
-    "Portal-Portal"
-}
-
--- ⚡ اختراق Dealer مباشر
-local function hackDealer(fruitName, price)
-    price = price or 0
+-- 🔍 البحث عن Fruit Dealer الحقيقي
+local function findFruitDealer()
+    local dealers = {}
     
-    -- Payloads خاصة للاختراق
-    local hackPayloads = {
-        -- Payload 1: مع force buy
+    print("🔍 يبحث عن Fruit Dealer في Workspace...")
+    
+    -- ابحث في Workspace عن Dealer NPC
+    for _, npc in pairs(game:GetService("Workspace"):GetDescendants()) do
+        if npc:IsA("Model") then
+            local npcName = npc.Name:lower()
+            
+            if npcName:find("dealer") or 
+               npcName:find("fruit") and npcName:find("seller") or
+               npcName:find("merchant") then
+                
+                -- تجميع معلومات Dealer
+                local dealerInfo = {
+                    model = npc,
+                    name = npc.Name,
+                    position = npc.PrimaryPart and npc.PrimaryPart.Position,
+                    humanoid = npc:FindFirstChild("Humanoid")
+                }
+                
+                -- ابحث عن ProximityPrompt
+                for _, prompt in pairs(npc:GetDescendants()) do
+                    if prompt:IsA("ProximityPrompt") then
+                        dealerInfo.prompt = prompt
+                        dealerInfo.promptText = prompt.ActionText
+                    end
+                end
+                
+                table.insert(dealers, dealerInfo)
+            end
+        end
+    end
+    
+    return dealers
+end
+
+-- ⚡ اختراق Fruit Dealer
+local function hackFruitDealer(dealerName)
+    -- Payloads مختلفة لـ Dealer
+    local dealerPayloads = {
+        -- 1. مع Dealer ID
         {
-            name = fruitName,
-            cost = price,
+            dealer = dealerName,
+            action = "buy_random_fruit",
             player = player.Name,
-            forceBuy = true,
-            bypass = true,
-            serverSide = false
+            price = 0,
+            free = true
         },
         
-        -- Payload 2: كـ admin
+        -- 2. مع Fruit Type
         {
-            fruit = fruitName,
-            price = price,
+            type = "random_fruit",
+            dealerId = dealerName,
             buyerId = player.UserId,
-            admin = true,
-            ignoreRequirements = true
+            cost = 0,
+            bypass = true
         },
         
-        -- Payload 3: بسيط جداً
-        {name = fruitName, price = price},
+        -- 3. بسيط
+        {buy = "random_fruit", dealer = dealerName},
         
-        -- Payload 4: مع timestamp
+        -- 4. مع بيانات كاملة
         {
-            item = fruitName,
-            amount = 1,
-            currency = "Beli",
-            price = price,
-            timestamp = os.time(),
-            _bypass = "true"
+            transaction = {
+                type = "fruit_purchase",
+                dealer = dealerName,
+                fruit = "random",
+                price = 0,
+                buyer = player.Name,
+                timestamp = os.time()
+            }
         }
     }
     
-    -- جرب كل payload
-    for i, payload in ipairs(hackPayloads) do
-        print("🎯 جرب Payload " .. i .. " مع " .. fruitName)
-        
-        local success, result = pcall(function()
-            dealerRemote:FireServer(payload)
-            return "✅ أرسلت"
-        end)
-        
-        if success then
-            print("🎉 نجح Payload " .. i .. "!")
-            return true, "✅ اشتريت " .. fruitName .. " مجاناً!"
+    -- جرب كل RemoteEvent ممكن
+    local remotesToTry = {
+        game:GetService("ReplicatedStorage"):FindFirstChild("Modules") 
+            and game:GetService("ReplicatedStorage").Modules.Net.RE.ShopNetwork,
+        game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
+            and game:GetService("ReplicatedStorage").Remotes.SalesEvent,
+        game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
+            and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("FruitPurchase")
+    }
+    
+    -- جرب كل Remote مع كل Payload
+    for _, remote in pairs(remotesToTry) do
+        if remote and remote:IsA("RemoteEvent") then
+            for i, payload in ipairs(dealerPayloads) do
+                local success, result = pcall(function()
+                    remote:FireServer(payload)
+                    return "✅ أرسلت إلى " .. remote.Name
+                end)
+                
+                if success then
+                    return true, "🎉 اخترقنا Dealer! - " .. result
+                end
+            end
         end
-        
-        task.wait(0.1) -- تأخير بسيط
     end
     
-    return false, "❌ كل الطرق فشلت"
+    return false, "❌ مافيش RemoteEvent ينفع مع Dealer"
 end
 
--- 📱 واجهة الهاتف
-local function createMobileUI()
+-- 📱 واجهة الموبايل
+local function createDealerUI()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "DealerHack"
+    screenGui.Name = "FruitDealerHack"
     screenGui.ResetOnSpawn = false
     
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0.95, 0, 0.6, 0)
-    mainFrame.Position = UDim2.new(0.025, 0, 0.2, 0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    mainFrame.Size = UDim2.new(0.9, 0, 0.45, 0)
+    mainFrame.Position = UDim2.new(0.05, 0, 0.27, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     
     -- العنوان
     local title = Instance.new("TextLabel")
-    title.Text = "⚡ FRUIT DEALER HACK"
-    title.Size = UDim2.new(1, 0, 0.1, 0)
-    title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    title.Text = "🍎 FRUIT DEALER HACK"
+    title.Size = UDim2.new(1, 0, 0.15, 0)
+    title.BackgroundColor3 = Color3.fromRGB(150, 0, 150)
     title.TextColor3 = Color3.new(1, 1, 1)
     title.Font = Enum.Font.SourceSansBold
     
-    -- قائمة الفواكه
-    local fruitsFrame = Instance.new("ScrollingFrame")
-    fruitsFrame.Size = UDim2.new(0.9, 0, 0.5, 0)
-    fruitsFrame.Position = UDim2.new(0.05, 0, 0.12, 0)
-    fruitsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    fruitsFrame.ScrollBarThickness = 8
-    fruitsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    -- زر البحث عن Dealers
+    local findBtn = Instance.new("TextButton")
+    findBtn.Text = "🔍 ابحث عن Fruit Dealer"
+    findBtn.Size = UDim2.new(0.85, 0, 0.15, 0)
+    findBtn.Position = UDim2.new(0.075, 0, 0.2, 0)
+    findBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+    findBtn.TextColor3 = Color3.new(1, 1, 1)
+    findBtn.Font = Enum.Font.SourceSansBold
     
-    local fruitsLayout = Instance.new("UIListLayout")
-    fruitsLayout.Parent = fruitsFrame
-    fruitsLayout.Padding = UDim.new(0, 5)
+    -- قائمة Dealers
+    local dealersList = Instance.new("TextLabel")
+    dealersList.Text = "لم يتم البحث بعد"
+    dealersList.Size = UDim2.new(0.85, 0, 0.35, 0)
+    dealersList.Position = UDim2.new(0.075, 0, 0.4, 0)
+    dealersList.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    dealersList.TextColor3 = Color3.new(1, 1, 1)
+    dealersList.TextWrapped = true
     
-    -- زر اختراق الكل
-    local hackAllBtn = Instance.new("TextButton")
-    hackAllBtn.Text = "💣 اختراق كل الفواكه"
-    hackAllBtn.Size = UDim2.new(0.9, 0, 0.1, 0)
-    hackAllBtn.Position = UDim2.new(0.05, 0, 0.65, 0)
-    hackAllBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 0)
-    hackAllBtn.TextColor3 = Color3.new(1, 1, 1)
-    hackAllBtn.Font = Enum.Font.SourceSansBold
+    -- زر الاختراق
+    local hackBtn = Instance.new("TextButton")
+    hackBtn.Text = "⚡ اخترق Dealer الحالي"
+    hackBtn.Size = UDim2.new(0.85, 0, 0.15, 0)
+    hackBtn.Position = UDim2.new(0.075, 0, 0.8, 0)
+    hackBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    hackBtn.TextColor3 = Color3.new(1, 1, 1)
+    hackBtn.Font = Enum.Font.SourceSansBold
+    hackBtn.Visible = false
     
-    -- النتائج
-    local resultLabel = Instance.new("TextLabel")
-    resultLabel.Text = "اختر فاكهة واضغط عليها"
-    resultLabel.Size = UDim2.new(0.9, 0, 0.2, 0)
-    resultLabel.Position = UDim2.new(0.05, 0, 0.78, 0)
-    resultLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    resultLabel.TextColor3 = Color3.new(1, 1, 1)
-    resultLabel.TextWrapped = true
+    -- المتغيرات
+    local currentDealers = {}
+    local selectedDealer = nil
     
-    -- إنشاء أزرار للفواكه
-    for i, fruit in ipairs(FRUITS) do
-        local btnFrame = Instance.new("Frame")
-        btnFrame.Size = UDim2.new(1, 0, 0, 40)
-        btnFrame.BackgroundColor3 = i % 2 == 0 and Color3.fromRGB(40, 40, 50) or Color3.fromRGB(45, 45, 55)
-        
-        local fruitLabel = Instance.new("TextLabel")
-        fruitLabel.Text = "🍎 " .. fruit
-        fruitLabel.Size = UDim2.new(0.7, 0, 1, 0)
-        fruitLabel.BackgroundTransparency = 1
-        fruitLabel.TextColor3 = Color3.new(1, 1, 1)
-        fruitLabel.TextXAlignment = Enum.TextXAlignment.Left
-        fruitLabel.PaddingLeft = UDim.new(0, 10)
-        
-        local hackBtn = Instance.new("TextButton")
-        hackBtn.Text = "⚡ اخترق"
-        hackBtn.Size = UDim2.new(0.25, 0, 0.7, 0)
-        hackBtn.Position = UDim2.new(0.73, 0, 0.15, 0)
-        hackBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        hackBtn.TextColor3 = Color3.new(1, 1, 1)
-        
-        -- حدث الاختراق
-        hackBtn.MouseButton1Click:Connect(function()
-            hackBtn.Text = "💥"
-            resultLabel.Text = "جاري اختراق " .. fruit
-            
-            task.spawn(function()
-                local success, message = hackDealer(fruit, 0)
-                
-                if success then
-                    resultLabel.Text = message
-                    resultLabel.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
-                    hackBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-                else
-                    resultLabel.Text = message
-                    resultLabel.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
-                    hackBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-                end
-                
-                hackBtn.Text = "⚡ اخترق"
-            end)
-        end)
-        
-        fruitLabel.Parent = btnFrame
-        hackBtn.Parent = btnFrame
-        btnFrame.Parent = fruitsFrame
-    end
-    
-    -- حدث اختراق الكل
-    hackAllBtn.MouseButton1Click:Connect(function()
-        hackAllBtn.Text = "💥 يخترق الكل..."
-        resultLabel.Text = "جاري اختراق جميع الفواكه..."
+    -- حدث البحث
+    findBtn.MouseButton1Click:Connect(function()
+        findBtn.Text = "⏳ جاري البحث..."
+        dealersList.Text = "🔍 يبحث عن Fruit Dealers..."
         
         task.spawn(function()
-            local successCount = 0
+            currentDealers = findFruitDealer()
             
-            for i, fruit in ipairs(FRUITS) do
-                resultLabel.Text = "💥 يخترق (" .. i .. "/" .. #FRUITS .. "): " .. fruit
+            if #currentDealers == 0 then
+                dealersList.Text = "❌ مافيش Fruit Dealer\n\n" ..
+                                  "تأكد أنك:\n" ..
+                                  "1. في منطقة بها Dealer\n" ..
+                                  "2. قريب من Dealer\n" ..
+                                  "3. أعد المحاولة"
+                hackBtn.Visible = false
+            else
+                local dealerText = "✅ وجد " .. #currentDealers .. " Dealer:\n\n"
                 
-                local success, _ = hackDealer(fruit, 0)
-                if success then
-                    successCount = successCount + 1
-                    print("✅ اخترقنا: " .. fruit)
+                for i, dealer in ipairs(currentDealers) do
+                    dealerText = dealerText .. i .. ". " .. dealer.name .. "\n"
+                    if dealer.promptText then
+                        dealerText = dealerText .. "   📝: " .. dealer.promptText .. "\n"
+                    end
                 end
                 
-                task.wait(0.3) -- تأخير بين الفواكه
+                dealersList.Text = dealerText
+                hackBtn.Visible = true
+                selectedDealer = currentDealers[1]
             end
             
-            resultLabel.Text = "📊 اخترقنا " .. successCount .. "/" .. #FRUITS .. " فواكه"
+            findBtn.Text = "🔍 ابحث عن Fruit Dealer"
+        end)
+    end)
+    
+    -- حدث الاختراق
+    hackBtn.MouseButton1Click:Connect(function()
+        if not selectedDealer then return end
+        
+        hackBtn.Text = "💥 يخترق..."
+        dealersList.Text = "⚡ جاري اختراق: " .. selectedDealer.name
+        
+        task.spawn(function()
+            local success, message = hackFruitDealer(selectedDealer.name)
             
-            if successCount > 0 then
-                resultLabel.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
+            if success then
+                dealersList.Text = message
+                dealersList.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
             else
-                resultLabel.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+                dealersList.Text = message
+                dealersList.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
             end
             
-            hackAllBtn.Text = "💣 اختراق كل الفواكه"
+            hackBtn.Text = "⚡ اخترق Dealer الحالي"
         end)
     end)
     
     -- التجميع
     title.Parent = mainFrame
-    fruitsFrame.Parent = mainFrame
-    hackAllBtn.Parent = mainFrame
-    resultLabel.Parent = mainFrame
+    findBtn.Parent = mainFrame
+    dealersList.Parent = mainFrame
+    hackBtn.Parent = mainFrame
     mainFrame.Parent = screenGui
     screenGui.Parent = player.PlayerGui
     
     return screenGui
 end
 
--- 🔧 تحقق من Dealer
-local function checkDealerSystem()
-    print("\n🎯 تحقق من Fruit Dealer...")
-    
-    if not dealerRemote then
-        print("❌ ShopNetwork مش موجود!")
-        print("🔍 المسار: ReplicatedStorage.Modules.Net.RE.ShopNetwork")
-        return false
-    end
-    
-    print("✅ Dealer موجود: " .. dealerRemote.Name)
-    print("🎯 جاهز للاختراق!")
-    return true
-end
-
 -- أوامر الكونسول
-_G.HackFruit = function(fruitName)
-    if not fruitName then
-        print("🍎 الفواكه المتاحة:")
-        for i, fruit in ipairs(FRUITS) do
-            print(i .. ". " .. fruit)
-        end
-        return "اختر فاكهة"
-    end
-    
-    return hackDealer(fruitName, 0)
+_G.FindDealers = function()
+    return findFruitDealer()
 end
 
-_G.HackAllFruits = function()
-    local successCount = 0
-    for i, fruit in ipairs(FRUITS) do
-        print("🎯 [" .. i .. "] يخترق: " .. fruit)
-        local success, _ = hackDealer(fruit, 0)
-        if success then successCount = successCount + 1 end
-        task.wait(0.2)
+_G.HackDealer = function(dealerName)
+    if not dealerName then
+        local dealers = findFruitDealer()
+        if #dealers == 0 then return "❌ مافيش Dealers" end
+        
+        print("🎯 Dealers المتاحة:")
+        for i, dealer in ipairs(dealers) do
+            print(i .. ". " .. dealer.name)
+        end
+        return "أدخل اسم Dealer"
     end
-    return "اخترقنا " .. successCount .. "/" .. #FRUITS .. " فواكه"
+    
+    return hackFruitDealer(dealerName)
+end
+
+_G.AutoHackDealers = function()
+    local dealers = findFruitDealer()
+    if #dealers == 0 then return "❌ مافيش Dealers" end
+    
+    for i, dealer in ipairs(dealers) do
+        print("🎯 [" .. i .. "] يخترق: " .. dealer.name)
+        hackFruitDealer(dealer.name)
+        task.wait(0.5)
+    end
+    
+    return "جربت اختراق " .. #dealers .. " Dealer"
 end
 
 -- بدء التشغيل
 print([[
     
-⚡ FRUIT DEALER HACK
-🎯 اختراق متجر الفواكه في Blox Fruits
+🍎 FRUIT DEALER HACK
+🎯 اختراق Fruit Dealer العشوائي في Blox Fruits
 
-🍎 الفواكه المتاحة:
-1. Bomb-Bomb ← أسهل
-2. Spike-Spike
-3. Chop-Chop  
-4. Flame-Flame
-5. Ice-Ice
-6. Light-Light
+🔍 Dealer هو:
+• NPC يبيع فواكه عشوائية
+• موجود في الجزر المختلفة
+• سعره من 50k إلى 100k Beli
 
 ⚡ الأوامر:
-_G.HackFruit("Bomb-Bomb")
-_G.HackAllFruits()
+_G.FindDealers() - البحث عن Dealers
+_G.HackDealer("اسم_Dealer") - اختراق Dealer
+_G.AutoHackDealers() - اختراق كل Dealers
 
 ]])
 
--- التحقق من النظام
-if checkDealerSystem() then
-    -- إنشاء الواجهة
-    createMobileUI()
-    print("✅ الواجهة جاهزة! جرب Bomb-Bomb أولاً!")
-else
-    print("❌ النظام مش موجود!")
-end
+-- إنشاء الواجهة
+createDealerUI()
+
+print("✅ Fruit Dealer Hack جاهز!")
