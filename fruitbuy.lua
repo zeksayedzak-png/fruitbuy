@@ -1,230 +1,224 @@
--- 🎯 BLOX FRUITS EXPLOITER - Mobile Version
+-- 🎯 BLOX FRUITS DEALER HACK
 -- loadstring(game:HttpGet("رابط_هذا_الكود"))()
 
 local player = game.Players.LocalPlayer
+local dealerRemote = game:GetService("ReplicatedStorage").Modules.Net.RE.ShopNetwork
 
--- 🔧 أنظمة Blox Fruits
-local BloxSystems = {
-    -- Shop System
-    shopNetwork = game:GetService("ReplicatedStorage"):FindFirstChild("Modules") 
-        and game:GetService("ReplicatedStorage").Modules.Net.RE.ShopNetwork,
-    
-    -- Sales System  
-    salesEvent = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
-        and game:GetService("ReplicatedStorage").Remotes.SalesEvent,
-    
-    -- Purchase Systems
-    purchaseSubclass = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
-        and game:GetService("ReplicatedStorage").Remotes.SubclassNetwork.PurchaseSubclass,
-    
-    purchasePassive = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
-        and game:GetService("ReplicatedStorage").Remotes.SubclassNetwork.PurchasePassive,
-    
-    -- Shop Requests
-    shopRequest = game:GetService("ReplicatedStorage"):FindFirstChild("Modules") 
-        and game:GetService("ReplicatedStorage").Modules.Net.RF.ShopNetworkRequest
+-- 📋 الفواكه المتاحة في Blox Fruits
+local FRUITS = {
+    "Bomb-Bomb",
+    "Spike-Spike", 
+    "Chop-Chop",
+    "Spring-Spring",
+    "Kilo-Kilo",
+    "Spin-Spin",
+    "Dark-Dark",
+    "Diamond-Diamond",
+    "Flame-Flame",
+    "Ice-Ice",
+    "Sand-Sand",
+    "Light-Light",
+    "Rubber-Rubber",
+    "Barrier-Barrier",
+    "Ghost-Ghost",
+    "Magma-Magma",
+    "Quake-Quake",
+    "String-String",
+    "Portal-Portal"
 }
 
--- 🎯 المنتجات في Blox Fruits
-local BloxProducts = {
-    fruits = {
-        "Bomb-Bomb",
-        "Spike-Spike", 
-        "Chop-Chop",
-        "Spring-Spring",
-        "Kilo-Kilo",
-        "Spin-Spin"
-    },
-    
-    gamepasses = {
-        "2xMoney",
-        "2xMastery", 
-        "2xBeli",
-        "FruitNotifier",
-        "Inventory+"
-    },
-    
-    subclasses = {
-        "BlackLeg",
-        "Electro",
-        "FishmanKarate",
-        "DragonBreath"
-    },
-    
-    swords = {
-        "Katana",
-        "Cutlass",
-        "Dual Katana",
-        "Triple Katana"
-    }
-}
-
--- ⚡ استغلال ShopNetwork
-local function exploitShop(product, price)
+-- ⚡ اختراق Dealer مباشر
+local function hackDealer(fruitName, price)
     price = price or 0
     
-    if not BloxSystems.shopNetwork then
-        return false, "❌ ShopNetwork مش موجود"
-    end
-    
-    -- Payloads مختلفة
-    local payloads = {
-        {item = product, price = price, player = player},
-        {product = product, cost = price, buyer = player.Name},
-        {name = product, value = price, purchase = true},
-        {id = product, amount = 1, currency = "Beli", price = price}
+    -- Payloads خاصة للاختراق
+    local hackPayloads = {
+        -- Payload 1: مع force buy
+        {
+            name = fruitName,
+            cost = price,
+            player = player.Name,
+            forceBuy = true,
+            bypass = true,
+            serverSide = false
+        },
+        
+        -- Payload 2: كـ admin
+        {
+            fruit = fruitName,
+            price = price,
+            buyerId = player.UserId,
+            admin = true,
+            ignoreRequirements = true
+        },
+        
+        -- Payload 3: بسيط جداً
+        {name = fruitName, price = price},
+        
+        -- Payload 4: مع timestamp
+        {
+            item = fruitName,
+            amount = 1,
+            currency = "Beli",
+            price = price,
+            timestamp = os.time(),
+            _bypass = "true"
+        }
     }
     
-    for i, payload in ipairs(payloads) do
+    -- جرب كل payload
+    for i, payload in ipairs(hackPayloads) do
+        print("🎯 جرب Payload " .. i .. " مع " .. fruitName)
+        
         local success, result = pcall(function()
-            BloxSystems.shopNetwork:FireServer(payload)
+            dealerRemote:FireServer(payload)
             return "✅ أرسلت"
         end)
         
         if success then
-            return true, "✅ نجح Payload " .. i .. " - " .. product
+            print("🎉 نجح Payload " .. i .. "!")
+            return true, "✅ اشتريت " .. fruitName .. " مجاناً!"
         end
         
-        task.wait(0.1)
+        task.wait(0.1) -- تأخير بسيط
     end
     
-    return false, "❌ فشل كل الطرق"
+    return false, "❌ كل الطرق فشلت"
 end
 
--- ⚡ استغلال PurchaseSubclass
-local function exploitSubclass(subclassName)
-    if not BloxSystems.purchaseSubclass then
-        return false, "❌ PurchaseSubclass مش موجود"
-    end
-    
-    local success, result = pcall(function()
-        return BloxSystems.purchaseSubclass:InvokeServer(subclassName)
-    end)
-    
-    if success then
-        return true, "✅ اشترينا Subclass: " .. subclassName
-    else
-        return false, "❌ فشل شراء Subclass"
-    end
-end
-
--- 📱 واجهة موبايل بسيطة
+-- 📱 واجهة الهاتف
 local function createMobileUI()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "BloxExploiter"
+    screenGui.Name = "DealerHack"
     screenGui.ResetOnSpawn = false
     
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0.9, 0, 0.5, 0)
-    mainFrame.Position = UDim2.new(0.05, 0, 0.25, 0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    mainFrame.Size = UDim2.new(0.95, 0, 0.6, 0)
+    mainFrame.Position = UDim2.new(0.025, 0, 0.2, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     
     -- العنوان
     local title = Instance.new("TextLabel")
-    title.Text = "🎯 BLOX FRUITS EXPLOITER"
-    title.Size = UDim2.new(1, 0, 0.12, 0)
+    title.Text = "⚡ FRUIT DEALER HACK"
+    title.Size = UDim2.new(1, 0, 0.1, 0)
     title.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
     title.TextColor3 = Color3.new(1, 1, 1)
     title.Font = Enum.Font.SourceSansBold
     
-    -- حقل المنتج
-    local productBox = Instance.new("TextBox")
-    productBox.PlaceholderText = "اسم المنتج (مثال: Bomb-Bomb)"
-    productBox.Size = UDim2.new(0.85, 0, 0.12, 0)
-    productBox.Position = UDim2.new(0.075, 0, 0.15, 0)
-    productBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    productBox.TextColor3 = Color3.new(1, 1, 1)
+    -- قائمة الفواكه
+    local fruitsFrame = Instance.new("ScrollingFrame")
+    fruitsFrame.Size = UDim2.new(0.9, 0, 0.5, 0)
+    fruitsFrame.Position = UDim2.new(0.05, 0, 0.12, 0)
+    fruitsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    fruitsFrame.ScrollBarThickness = 8
+    fruitsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
     
-    -- زر الفواكه
-    local fruitsBtn = Instance.new("TextButton")
-    fruitsBtn.Text = "🍎 فواكه"
-    fruitsBtn.Size = UDim2.new(0.4, 0, 0.1, 0)
-    fruitsBtn.Position = UDim2.new(0.075, 0, 0.3, 0)
-    fruitsBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    fruitsBtn.TextColor3 = Color3.new(1, 1, 1)
+    local fruitsLayout = Instance.new("UIListLayout")
+    fruitsLayout.Parent = fruitsFrame
+    fruitsLayout.Padding = UDim.new(0, 5)
     
-    -- زر Subclasses
-    local subclassBtn = Instance.new("TextButton")
-    subclassBtn.Text = "🥋 Subclasses"
-    subclassBtn.Size = UDim2.new(0.4, 0, 0.1, 0)
-    subclassBtn.Position = UDim2.new(0.525, 0, 0.3, 0)
-    subclassBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 150)
-    subclassBtn.TextColor3 = Color3.new(1, 1, 1)
-    
-    -- زر الاستغلال
-    local exploitBtn = Instance.new("TextButton")
-    exploitBtn.Text = "⚡ استغل الآن (سعر 0)"
-    exploitBtn.Size = UDim2.new(0.85, 0, 0.15, 0)
-    exploitBtn.Position = UDim2.new(0.075, 0, 0.45, 0)
-    exploitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-    exploitBtn.TextColor3 = Color3.new(1, 1, 1)
-    exploitBtn.Font = Enum.Font.SourceSansBold
+    -- زر اختراق الكل
+    local hackAllBtn = Instance.new("TextButton")
+    hackAllBtn.Text = "💣 اختراق كل الفواكه"
+    hackAllBtn.Size = UDim2.new(0.9, 0, 0.1, 0)
+    hackAllBtn.Position = UDim2.new(0.05, 0, 0.65, 0)
+    hackAllBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 0)
+    hackAllBtn.TextColor3 = Color3.new(1, 1, 1)
+    hackAllBtn.Font = Enum.Font.SourceSansBold
     
     -- النتائج
     local resultLabel = Instance.new("TextLabel")
-    resultLabel.Text = "اختر منتج واضغط ⚡"
-    resultLabel.Size = UDim2.new(0.85, 0, 0.25, 0)
-    resultLabel.Position = UDim2.new(0.075, 0, 0.65, 0)
+    resultLabel.Text = "اختر فاكهة واضغط عليها"
+    resultLabel.Size = UDim2.new(0.9, 0, 0.2, 0)
+    resultLabel.Position = UDim2.new(0.05, 0, 0.78, 0)
     resultLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     resultLabel.TextColor3 = Color3.new(1, 1, 1)
     resultLabel.TextWrapped = true
     
-    -- حدث زر الفواكه
-    fruitsBtn.MouseButton1Click:Connect(function()
-        productBox.Text = "Bomb-Bomb"
-        resultLabel.Text = "🍎 جرب Bomb-Bomb أولاً"
-    end)
-    
-    -- حدث زر Subclasses
-    subclassBtn.MouseButton1Click:Connect(function()
-        productBox.Text = "BlackLeg"
-        resultLabel.Text = "🥋 جرب BlackLeg Subclass"
-    end)
-    
-    -- حدث الاستغلال
-    exploitBtn.MouseButton1Click:Connect(function()
-        local product = productBox.Text
-        if product == "" then return end
+    -- إنشاء أزرار للفواكه
+    for i, fruit in ipairs(FRUITS) do
+        local btnFrame = Instance.new("Frame")
+        btnFrame.Size = UDim2.new(1, 0, 0, 40)
+        btnFrame.BackgroundColor3 = i % 2 == 0 and Color3.fromRGB(40, 40, 50) or Color3.fromRGB(45, 45, 55)
         
-        exploitBtn.Text = "⏳"
-        resultLabel.Text = "جاري: " .. product
+        local fruitLabel = Instance.new("TextLabel")
+        fruitLabel.Text = "🍎 " .. fruit
+        fruitLabel.Size = UDim2.new(0.7, 0, 1, 0)
+        fruitLabel.BackgroundTransparency = 1
+        fruitLabel.TextColor3 = Color3.new(1, 1, 1)
+        fruitLabel.TextXAlignment = Enum.TextXAlignment.Left
+        fruitLabel.PaddingLeft = UDim.new(0, 10)
+        
+        local hackBtn = Instance.new("TextButton")
+        hackBtn.Text = "⚡ اخترق"
+        hackBtn.Size = UDim2.new(0.25, 0, 0.7, 0)
+        hackBtn.Position = UDim2.new(0.73, 0, 0.15, 0)
+        hackBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        hackBtn.TextColor3 = Color3.new(1, 1, 1)
+        
+        -- حدث الاختراق
+        hackBtn.MouseButton1Click:Connect(function()
+            hackBtn.Text = "💥"
+            resultLabel.Text = "جاري اختراق " .. fruit
+            
+            task.spawn(function()
+                local success, message = hackDealer(fruit, 0)
+                
+                if success then
+                    resultLabel.Text = message
+                    resultLabel.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
+                    hackBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+                else
+                    resultLabel.Text = message
+                    resultLabel.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+                    hackBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+                end
+                
+                hackBtn.Text = "⚡ اخترق"
+            end)
+        end)
+        
+        fruitLabel.Parent = btnFrame
+        hackBtn.Parent = btnFrame
+        btnFrame.Parent = fruitsFrame
+    end
+    
+    -- حدث اختراق الكل
+    hackAllBtn.MouseButton1Click:Connect(function()
+        hackAllBtn.Text = "💥 يخترق الكل..."
+        resultLabel.Text = "جاري اختراق جميع الفواكه..."
         
         task.spawn(function()
-            -- إذا كان Subclass
-            local isSubclass = false
-            for _, subclass in ipairs(BloxProducts.subclasses) do
-                if product:find(subclass) then
-                    isSubclass = true
-                    break
+            local successCount = 0
+            
+            for i, fruit in ipairs(FRUITS) do
+                resultLabel.Text = "💥 يخترق (" .. i .. "/" .. #FRUITS .. "): " .. fruit
+                
+                local success, _ = hackDealer(fruit, 0)
+                if success then
+                    successCount = successCount + 1
+                    print("✅ اخترقنا: " .. fruit)
                 end
+                
+                task.wait(0.3) -- تأخير بين الفواكه
             end
             
-            local success, message
-            if isSubclass then
-                success, message = exploitSubclass(product)
-            else
-                success, message = exploitShop(product, 0)
-            end
+            resultLabel.Text = "📊 اخترقنا " .. successCount .. "/" .. #FRUITS .. " فواكه"
             
-            if success then
-                resultLabel.Text = message
+            if successCount > 0 then
                 resultLabel.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
-                print("\n🎉 " .. message)
             else
-                resultLabel.Text = message
                 resultLabel.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
             end
             
-            exploitBtn.Text = "⚡ استغل الآن (سعر 0)"
+            hackAllBtn.Text = "💣 اختراق كل الفواكه"
         end)
     end)
     
     -- التجميع
     title.Parent = mainFrame
-    productBox.Parent = mainFrame
-    fruitsBtn.Parent = mainFrame
-    subclassBtn.Parent = mainFrame
-    exploitBtn.Parent = mainFrame
+    fruitsFrame.Parent = mainFrame
+    hackAllBtn.Parent = mainFrame
     resultLabel.Parent = mainFrame
     mainFrame.Parent = screenGui
     screenGui.Parent = player.PlayerGui
@@ -232,73 +226,70 @@ local function createMobileUI()
     return screenGui
 end
 
+-- 🔧 تحقق من Dealer
+local function checkDealerSystem()
+    print("\n🎯 تحقق من Fruit Dealer...")
+    
+    if not dealerRemote then
+        print("❌ ShopNetwork مش موجود!")
+        print("🔍 المسار: ReplicatedStorage.Modules.Net.RE.ShopNetwork")
+        return false
+    end
+    
+    print("✅ Dealer موجود: " .. dealerRemote.Name)
+    print("🎯 جاهز للاختراق!")
+    return true
+end
+
 -- أوامر الكونسول
-_G.BuyFruit = function(fruitName)
+_G.HackFruit = function(fruitName)
     if not fruitName then
         print("🍎 الفواكه المتاحة:")
-        for i, fruit in ipairs(BloxProducts.fruits) do
+        for i, fruit in ipairs(FRUITS) do
             print(i .. ". " .. fruit)
         end
         return "اختر فاكهة"
     end
     
-    return exploitShop(fruitName, 0)
+    return hackDealer(fruitName, 0)
 end
 
-_G.BuySubclass = function(subclassName)
-    if not subclassName then
-        print("🥋 Subclasses المتاحة:")
-        for i, subclass in ipairs(BloxProducts.subclasses) do
-            print(i .. ". " .. subclass)
-        end
-        return "اختر Subclass"
+_G.HackAllFruits = function()
+    local successCount = 0
+    for i, fruit in ipairs(FRUITS) do
+        print("🎯 [" .. i .. "] يخترق: " .. fruit)
+        local success, _ = hackDealer(fruit, 0)
+        if success then successCount = successCount + 1 end
+        task.wait(0.2)
     end
-    
-    return exploitSubclass(subclassName)
-end
-
-_G.TestAll = function()
-    print("🎯 جرب كل الأنظمة...")
-    
-    -- جرب فاكهة
-    exploitShop("Bomb-Bomb", 0)
-    task.wait(0.5)
-    
-    -- جرب Subclass
-    exploitSubclass("BlackLeg")
-    task.wait(0.5)
-    
-    -- جرب Sword
-    exploitShop("Katana", 0)
-    
-    return "تم اختبار 3 منتجات"
+    return "اخترقنا " .. successCount .. "/" .. #FRUITS .. " فواكه"
 end
 
 -- بدء التشغيل
 print([[
     
-🎯 BLOX FRUITS EXPLOITER
-⚡ نظام Shop Network في Blox Fruits
+⚡ FRUIT DEALER HACK
+🎯 اختراق متجر الفواكه في Blox Fruits
 
-🎯 الأنظمة المكتشفة:
-1. ShopNetwork - المتجر الرئيسي
-2. PurchaseSubclass - شراء Subclasses
-3. PurchasePassive - شراء Passives
-4. SalesEvent - عروض التخفيضات
-
-🍎 أمثلة:
-• Bomb-Bomb, Spike-Spike, Chop-Chop
-• BlackLeg, Electro, FishmanKarate  
-• Katana, Cutlass, Dual Katana
+🍎 الفواكه المتاحة:
+1. Bomb-Bomb ← أسهل
+2. Spike-Spike
+3. Chop-Chop  
+4. Flame-Flame
+5. Ice-Ice
+6. Light-Light
 
 ⚡ الأوامر:
-_G.BuyFruit("Bomb-Bomb")
-_G.BuySubclass("BlackLeg")
-_G.TestAll()
+_G.HackFruit("Bomb-Bomb")
+_G.HackAllFruits()
 
 ]])
 
--- إنشاء الواجهة
-createMobileUI()
-
-print("✅ Blox Fruits Exploiter جاهز!")
+-- التحقق من النظام
+if checkDealerSystem() then
+    -- إنشاء الواجهة
+    createMobileUI()
+    print("✅ الواجهة جاهزة! جرب Bomb-Bomb أولاً!")
+else
+    print("❌ النظام مش موجود!")
+end
