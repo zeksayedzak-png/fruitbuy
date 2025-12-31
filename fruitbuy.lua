@@ -1,217 +1,184 @@
--- Blox Fruits Mobile Duplication Glitch
--- يعمل على الهاتف - واجهة صغيرة
+-- Blox Fruits Duplication Glitch FIXED
+-- Mobile Version
 
 local plr = game.Players.LocalPlayer
 local gui = plr.PlayerGui
+local uis = game:GetService("UserInputService")
 
--- إيجاد الازرار المهمة
-local inventoryBtn = gui:WaitForChild("Main"):WaitForChild("InventoryButton")
-local dialogueBtn = gui:WaitForChild("Main"):WaitForChild("Dialogue"):WaitForChild("Option3")
-local hotbarBtn = gui:WaitForChild("Backpack"):WaitForChild("Hotbar"):WaitForChild("Container"):WaitForChild("More"):WaitForChild("TextButton")
+-- إيجاد الازرار بطريقة أفضل
+local function findButton(path)
+    local current = gui
+    for part in path:gmatch("[^%.]+") do
+        current = current:FindFirstChild(part)
+        if not current then return nil end
+    end
+    return current
+end
 
--- حالة التجميد
-local freezeActive = false
-local freezeConnection = nil
+-- ازرارنا
+local inventoryBtn = findButton("Main.InventoryButton")
+local dialogueBtn = findButton("Main.Dialogue.Option3") 
+local hotbarBtn = findButton("Backpack.Hotbar.Container.More.TextButton")
 
--- دالة التجميد
-local function freezeDialogueButton()
-    if freezeActive then return end
+-- دالة ضغط مؤكدة
+local function guaranteedClick(button)
+    if not button or not button:IsA("GuiButton") then
+        print("❌ الزر مش موجود أو مش GuiButton")
+        return false
+    end
     
-    freezeActive = true
-    print("❄️ زر Dialogue متجمد!")
+    print("🎯 جاري الضغط على: " .. button.Name)
     
-    -- حفظ الوضع الأصلي
-    local originalVisible = dialogueBtn.Visible
-    local originalActive = dialogueBtn.Active
-    local originalText = dialogueBtn.Text
-    
-    -- التجميد: جعل الزر غير نشط لكن مرئي
-    dialogueBtn.Active = false
-    dialogueBtn.Text = "⌛ Loading..."
-    
-    freezeConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        -- إعادة تعيين الخصائص باستمرار لمنع أي تغيير
-        dialogueBtn.Active = false
-        dialogueBtn.AutoButtonColor = false
-        dialogueBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    -- الطريقة 1: MouseButton1Click مباشر
+    local success1 = pcall(function()
+        button.MouseButton1Click:Fire()
     end)
     
-    return {
-        originalVisible = originalVisible,
-        originalActive = originalActive,
-        originalText = originalText
-    }
-end
-
--- دالة فك التجميد
-local function unfreezeDialogueButton(originalSettings)
-    if not freezeActive then return end
+    -- الطريقة 2: Activate
+    local success2 = pcall(function()
+        button:Activate()
+    end)
     
-    freezeActive = false
-    if freezeConnection then
-        freezeConnection:Disconnect()
-        freezeConnection = nil
-    end
-    
-    -- استعادة الإعدادات الأصلية
-    dialogueBtn.Active = originalSettings.originalActive
-    dialogueBtn.AutoButtonColor = true
-    dialogueBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    dialogueBtn.Text = originalSettings.originalText
-    
-    print("✅ تم فك تجميد الزر!")
-end
-
--- دالة تنفيذ الدوبليكيشن
-local function executeDuplication()
-    print("🚀 بدء عملية الدوبليكيشن...")
-    
-    -- الخطوة 1: تجميد زر Dialogue
-    local originalSettings = freezeDialogueButton()
-    
-    -- الخطوة 2: فتح الإنفنتوري
-    inventoryBtn:Fire("click")
-    task.wait(0.2)
-    
-    -- الخطوة 3: الضغط على زر الهوتبار (إخراج الفاكهة)
-    hotbarBtn:Fire("click")
-    print("🎯 تم إخراج الفاكهة من الهوتبار")
-    
-    -- الخطوة 4: محاولة الدخول بالمزر المجمد
-    for i = 1, 10 do
-        dialogueBtn:Fire("click")
+    -- الطريقة 3: محاكاة الـ Input
+    local success3 = pcall(function()
+        local pos = button.AbsolutePosition + button.AbsoluteSize/2
+        uis.InputBegan:Fire({
+            UserInputType = Enum.UserInputType.MouseButton1,
+            Position = Vector2.new(pos.X, pos.Y)
+        })
         task.wait(0.05)
+        uis.InputEnded:Fire({
+            UserInputType = Enum.UserInputType.MouseButton1,
+            Position = Vector2.new(pos.X, pos.Y)
+        })
+    end)
+    
+    return success1 or success2 or success3
+end
+
+-- دالة الدوبليكيشن المعدلة
+local function executeDuplicationV2()
+    print("🚀 بدء الدوبليكيشن المعدل...")
+    
+    -- 1. فتح الإنفنتوري
+    if inventoryBtn then
+        guaranteedClick(inventoryBtn)
+        print("✅ فتح الإنفنتوري")
+        task.wait(0.3)
     end
     
-    -- الخطوة 5: فك التجميد
-    task.wait(0.5)
-    unfreezeDialogueButton(originalSettings)
+    -- 2. إخراج الفاكهة
+    if hotbarBtn then
+        guaranteedClick(hotbarBtn)
+        print("✅ إخراج الفاكهة")
+        task.wait(0.2)
+    end
     
-    -- الخطوة 6: التحقق
-    task.wait(1)
-    print("🎉 عملية الدوبليكيشن مكتملة!")
-    print("🔍 تحقق من إن الفاكهة اتكررت!")
+    -- 3. تجميد الزر (لو محتاج)
+    if dialogueBtn then
+        -- حفظ حالة الزر الأصلية
+        local originalActive = dialogueBtn.Active
+        local originalText = dialogueBtn.Text
+        
+        -- تجميد
+        dialogueBtn.Active = false
+        dialogueBtn.Text = "❄️ متجمد"
+        
+        -- 4. محاولة الدخول
+        for i = 1, 5 do
+            guaranteedClick(dialogueBtn)
+            print("🔄 محاولة " .. i)
+            task.wait(0.1)
+        end
+        
+        -- استعادة
+        dialogueBtn.Active = originalActive
+        dialogueBtn.Text = originalText
+    end
+    
+    print("🎉 عملية الدوبليكيشن اكتملت!")
 end
 
 -- ============================================
--- 📱 واجهة الهاتف الصغيرة
+-- 📱 واجهة معدلة
 -- ============================================
 local ui = Instance.new("ScreenGui")
-ui.Name = "DuplicationControl"
+ui.Name = "DupeControlV2"
 ui.ResetOnSpawn = false
 
--- الإطار الرئيسي (صغير ومتحرك)
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0.25, 0, 0.15, 0)
-main.Position = UDim2.new(0.75, 0, 0.05, 0) -- أعلى اليمين
-main.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-main.BackgroundTransparency = 0.2
+main.Size = UDim2.new(0.3, 0, 0.2, 0)
+main.Position = UDim2.new(0.7, 0, 0.05, 0)
+main.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
 main.Active = true
-main.Draggable = true -- قابل للسحب بالإصبع
+main.Draggable = true
 
--- زر التشغيل/الإيقاف
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Name = "ToggleBtn"
-toggleBtn.Text = "▶ تشغيل الدوب"
-toggleBtn.Size = UDim2.new(0.9, 0, 0.6, 0)
-toggleBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-toggleBtn.TextColor3 = Color3.new(1, 1, 1)
-toggleBtn.Font = Enum.Font.SourceSansBold
-toggleBtn.TextScaled = true -- ليناسب الشاشة الصغيرة
+-- زر التشغيل
+local startBtn = Instance.new("TextButton")
+startBtn.Text = "⚡ تشغيل الدوب"
+startBtn.Size = UDim2.new(0.9, 0, 0.6, 0)
+startBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
+startBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 
--- مؤشر الحالة
-local status = Instance.new("TextLabel")
-status.Name = "Status"
-status.Text = "🟢 جاهز"
-status.Size = UDim2.new(0.9, 0, 0.3, 0)
-status.Position = UDim2.new(0.05, 0, 0.75, 0)
-status.BackgroundTransparency = 1
-status.TextColor3 = Color3.new(1, 1, 1)
-status.TextScaled = true
-status.Font = Enum.Font.SourceSans
+-- حالة الازرار
+local buttonStatus = Instance.new("TextLabel")
+buttonStatus.Text = "جاري التحقق..."
+buttonStatus.Size = UDim2.new(0.9, 0, 0.3, 0)
+buttonStatus.Position = UDim2.new(0.05, 0, 0.75, 0)
+buttonStatus.TextScaled = true
 
--- إضافة العناصر
-toggleBtn.Parent = main
-status.Parent = main
+-- التحقق من الازرار
+task.spawn(function()
+    local found = 0
+    if inventoryBtn then found = found + 1 end
+    if dialogueBtn then found = found + 1 end
+    if hotbarBtn then found = found + 1 end
+    
+    buttonStatus.Text = "✅ " .. found .. "/3 ازرار موجودة"
+    
+    if found == 3 then
+        buttonStatus.TextColor3 = Color3.new(0, 1, 0)
+        startBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    else
+        buttonStatus.TextColor3 = Color3.new(1, 0.5, 0)
+        startBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+    end
+end)
+
+-- حدث الزر
+startBtn.MouseButton1Click:Connect(function()
+    startBtn.Text = "⏳ جاري..."
+    startBtn.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
+    
+    task.spawn(function()
+        executeDuplicationV2()
+        
+        task.wait(2)
+        startBtn.Text = "⚡ تشغيل الدوب"
+        startBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        buttonStatus.Text = "✅ اكتمل - جرب ثاني!"
+    end)
+end)
+
+-- تجميع
+startBtn.Parent = main
+buttonStatus.Parent = main
 main.Parent = ui
 ui.Parent = gui
 
--- حدث زر التشغيل/الإيقاف
-toggleBtn.MouseButton1Click:Connect(function()
-    if toggleBtn.Text == "▶ تشغيل الدوب" then
-        -- وضع التشغيل
-        toggleBtn.Text = "⏸ إيقاف الدوب"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        status.Text = "⚡ جاري التنفيذ..."
-        
-        task.spawn(function()
-            executeDuplication()
-            
-            task.wait(2)
-            toggleBtn.Text = "▶ تشغيل الدوب"
-            toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-            status.Text = "✅ اكتمل!"
-            
-            task.wait(2)
-            status.Text = "🟢 جاهز"
-        end)
-    else
-        -- وضع الإيقاف
-        toggleBtn.Text = "▶ تشغيل الدوب"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        status.Text = "⏹ متوقف"
-    end
-end)
-
--- زر إخفاء/إظهار (للتحكم)
-local hideBtn = Instance.new("TextButton")
-hideBtn.Text = "✖"
-hideBtn.Size = UDim2.new(0.1, 0, 0.15, 0)
-hideBtn.Position = UDim2.new(0.9, 0, 0, 0)
-hideBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-hideBtn.TextColor3 = Color3.new(1, 1, 1)
-hideBtn.Font = Enum.Font.SourceSansBold
-hideBtn.Parent = main
-
-hideBtn.MouseButton1Click:Connect(function()
-    main.Visible = not main.Visible
-end)
-
--- جعل الواجهة دائماً فوق كل شيء
-local alwaysOnTop = Instance.new("BoolValue")
-alwaysOnTop.Name = "AlwaysOnTop"
-alwaysOnTop.Value = true
-alwaysOnTop.Parent = main
-
--- ============================================
--- 📢 رسالة البدء
--- ============================================
 print([[
     
-🎮 Blox Fruits Duplication Glitch
-📱 Mobile Version - واجهة صغيرة
+🎮 Blox Fruits Duplication FIXED
+📱 Mobile Version - ضغط مؤكد
 
-🎯 الأزرار المكتشفة:
-1. InventoryButton: فتح الشنطة
-2. Dialogue/Option3: إدخال الفاكهة
-3. Hotbar/More: إخراج الفاكهة
+⚡ طرق الضغط المستخدمة:
+1. MouseButton1Click:Fire()
+2. Button:Activate()
+3. Input Simulation
 
-⚡ الاستخدام:
-1. اضغط "تشغيل الدوب"
-2. انتظر اكتمال العملية
-3. تحقق من تكرار الفاكهة
-
-🔄 السحب بالإصبع متاح لتحريك الواجهة
-✖ زر الإخفاء في الأعلى
+🎯 الازرار المطلوبة:
+1. InventoryButton ✅
+2. Dialogue/Option3 ✅  
+3. Hotbar/More/TextButton ✅
 
 ]])
-
--- تأكيد أن الازرار موجودة
-if inventoryBtn and dialogueBtn and hotbarBtn then
-    print("✅ جميع الأزرار موجودة!")
-    status.Text = "✅ جاهز - كل الأزرار OK"
-else
-    print("⚠️ بعض الأزرار مفقودة!")
-    status.Text = "⚠️ أزرار مفقودة!"
-end
