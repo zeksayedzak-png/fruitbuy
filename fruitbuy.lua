@@ -68,6 +68,18 @@ local function displayResults(systems)
     end
 end
 
+-- دالة نسخ للحافظة
+local function copyToClipboard(text)
+    if setclipboard then
+        setclipboard(text)
+        return true
+    elseif writeclipboard then
+        writeclipboard(text)
+        return true
+    end
+    return false
+end
+
 -- واجهة موبايل بسيطة
 local function createGiftUI()
     local screenGui = Instance.new("ScreenGui")
@@ -75,14 +87,14 @@ local function createGiftUI()
     screenGui.ResetOnSpawn = false
     
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0.9, 0, 0.3, 0)
-    mainFrame.Position = UDim2.new(0.05, 0, 0.35, 0)
+    mainFrame.Size = UDim2.new(0.9, 0, 0.4, 0)
+    mainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
     mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     
     -- العنوان
     local title = Instance.new("TextLabel")
     title.Text = "🎁 Gift System Finder"
-    title.Size = UDim2.new(1, 0, 0.2, 0)
+    title.Size = UDim2.new(1, 0, 0.15, 0)
     title.BackgroundColor3 = Color3.fromRGB(0, 100, 50)
     title.TextColor3 = Color3.new(1, 1, 1)
     title.Font = Enum.Font.SourceSansBold
@@ -90,17 +102,27 @@ local function createGiftUI()
     -- زر البحث
     local searchBtn = Instance.new("TextButton")
     searchBtn.Text = "🔍 بحث عن الهدايا"
-    searchBtn.Size = UDim2.new(0.9, 0, 0.25, 0)
-    searchBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
+    searchBtn.Size = UDim2.new(0.9, 0, 0.2, 0)
+    searchBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
     searchBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
     searchBtn.TextColor3 = Color3.new(1, 1, 1)
     searchBtn.Font = Enum.Font.SourceSansBold
     
+    -- زر النسخ الجديد
+    local copyBtn = Instance.new("TextButton")
+    copyBtn.Text = "📋 نسخ النتائج"
+    copyBtn.Size = UDim2.new(0.9, 0, 0.2, 0)
+    copyBtn.Position = UDim2.new(0.05, 0, 0.45, 0)
+    copyBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
+    copyBtn.TextColor3 = Color3.new(1, 1, 1)
+    copyBtn.Font = Enum.Font.SourceSansBold
+    copyBtn.Visible = false
+    
     -- النتائج
     local resultLabel = Instance.new("TextLabel")
     resultLabel.Text = "اضغط للبحث عن أنظمة الهدايا"
-    resultLabel.Size = UDim2.new(0.9, 0, 0.4, 0)
-    resultLabel.Position = UDim2.new(0.05, 0, 0.55, 0)
+    resultLabel.Size = UDim2.new(0.9, 0, 0.3, 0)
+    resultLabel.Position = UDim2.new(0.05, 0, 0.7, 0)
     resultLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
     resultLabel.TextColor3 = Color3.new(1, 1, 1)
     resultLabel.TextWrapped = true
@@ -116,6 +138,7 @@ local function createGiftUI()
             if #systems == 0 then
                 resultLabel.Text = "❌ لم يتم العثور على أنظمة هدايا"
                 resultLabel.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+                copyBtn.Visible = false
             else
                 local text = "✅ وجد " .. #systems .. " نظام:\n\n"
                 for i, system in ipairs(systems) do
@@ -129,9 +152,26 @@ local function createGiftUI()
                 
                 resultLabel.Text = text
                 resultLabel.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+                copyBtn.Visible = true
                 
-                -- عرض الكل في الكونسول
-                displayResults(systems)
+                -- تخزين النتائج للنسخ
+                local copyText = "🎁 أنظمة الهدايا:\n"
+                for i, system in ipairs(systems) do
+                    copyText = copyText .. i .. ". " .. system.name .. " (" .. system.type .. ")\n"
+                    copyText = copyText .. "   المسار: " .. system.path .. "\n\n"
+                end
+                
+                copyBtn.MouseButton1Click:Connect(function()
+                    if copyToClipboard(copyText) then
+                        copyBtn.Text = "✅ تم النسخ!"
+                        task.wait(1)
+                        copyBtn.Text = "📋 نسخ النتائج"
+                    else
+                        copyBtn.Text = "❌ فشل النسخ"
+                        task.wait(1)
+                        copyBtn.Text = "📋 نسخ النتائج"
+                    end
+                end)
             end
             
             searchBtn.Text = "🔍 بحث عن الهدايا"
@@ -141,6 +181,7 @@ local function createGiftUI()
     -- التجميع
     title.Parent = mainFrame
     searchBtn.Parent = mainFrame
+    copyBtn.Parent = mainFrame
     resultLabel.Parent = mainFrame
     mainFrame.Parent = screenGui
     screenGui.Parent = player.PlayerGui
@@ -167,4 +208,5 @@ print([[
 • Claim, Open, Santa
 • Festive, Winter, NewYear
 
+- تم إضافة زر نسخ النتائج ✓
 ]])
