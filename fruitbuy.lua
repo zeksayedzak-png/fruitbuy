@@ -1,227 +1,367 @@
--- 🎯 FRUIT DEALER RANDOM HACK
+-- 🎯 ADDITEM INFO STEALER
 -- loadstring(game:HttpGet("رابط_هذا_الكود"))()
 
 local player = game.Players.LocalPlayer
-local MarketplaceService = game:GetService("MarketplaceService")
 
--- 🔍 البحث عن Fruit Dealer الحقيقي
-local function findFruitDealer()
-    local dealers = {}
+-- 🔍 البحث عن AddItem RemoteEvent
+local function findAddItemRemote()
+    print("🔍 يبحث عن AddItem RemoteEvent...")
     
-    print("🔍 يبحث عن Fruit Dealer في Workspace...")
+    -- المسار المباشر
+    local path = "ReplicatedStorage.GameEvents.TradeEvents.AddItem"
+    local pathParts = path:split(".")
+    local current = game
     
-    -- ابحث في Workspace عن Dealer NPC
-    for _, npc in pairs(game:GetService("Workspace"):GetDescendants()) do
-        if npc:IsA("Model") then
-            local npcName = npc.Name:lower()
-            
-            if npcName:find("dealer") or 
-               npcName:find("fruit") and npcName:find("seller") or
-               npcName:find("merchant") then
-                
-                -- تجميع معلومات Dealer
-                local dealerInfo = {
-                    model = npc,
-                    name = npc.Name,
-                    position = npc.PrimaryPart and npc.PrimaryPart.Position,
-                    humanoid = npc:FindFirstChild("Humanoid")
-                }
-                
-                -- ابحث عن ProximityPrompt
-                for _, prompt in pairs(npc:GetDescendants()) do
-                    if prompt:IsA("ProximityPrompt") then
-                        dealerInfo.prompt = prompt
-                        dealerInfo.promptText = prompt.ActionText
-                    end
-                end
-                
-                table.insert(dealers, dealerInfo)
-            end
+    for i = 2, #pathParts do
+        if current:FindFirstChild(pathParts[i]) then
+            current = current[pathParts[i]]
+        else
+            print("❌ جزء مفقود: " .. pathParts[i])
+            return nil
         end
     end
     
-    return dealers
+    if current and current:IsA("RemoteEvent") then
+        print("✅ وجد AddItem RemoteEvent!")
+        return current
+    else
+        print("❌ AddItem مش RemoteEvent")
+        return nil
+    end
 end
 
--- ⚡ اختراق Fruit Dealer
-local function hackFruitDealer(dealerName)
-    -- Payloads مختلفة لـ Dealer
-    local dealerPayloads = {
-        -- 1. مع Dealer ID
-        {
-            dealer = dealerName,
-            action = "buy_random_fruit",
-            player = player.Name,
-            price = 0,
-            free = true
-        },
-        
-        -- 2. مع Fruit Type
-        {
-            type = "random_fruit",
-            dealerId = dealerName,
-            buyerId = player.UserId,
-            cost = 0,
-            bypass = true
-        },
-        
-        -- 3. بسيط
-        {buy = "random_fruit", dealer = dealerName},
-        
-        -- 4. مع بيانات كاملة
-        {
-            transaction = {
-                type = "fruit_purchase",
-                dealer = dealerName,
-                fruit = "random",
-                price = 0,
-                buyer = player.Name,
-                timestamp = os.time()
-            }
-        }
+-- 🕵️‍♂️ جمع معلومات عن AddItem
+local function gatherAddItemInfo()
+    local addItemRemote = findAddItemRemote()
+    if not addItemRemote then
+        return nil, "❌ AddItem مش موجود"
+    end
+    
+    print("🕵️‍♂️ يجمع معلومات AddItem...")
+    
+    local info = {
+        name = addItemRemote.Name,
+        fullPath = addItemRemote:GetFullName(),
+        className = addItemRemote.ClassName,
+        parent = addItemRemote.Parent and addItemRemote.Parent.Name,
+        ancestry = {}
     }
     
-    -- جرب كل RemoteEvent ممكن
-    local remotesToTry = {
-        game:GetService("ReplicatedStorage"):FindFirstChild("Modules") 
-            and game:GetService("ReplicatedStorage").Modules.Net.RE.ShopNetwork,
-        game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
-            and game:GetService("ReplicatedStorage").Remotes.SalesEvent,
-        game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") 
-            and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("FruitPurchase")
+    -- جمع مسار الآباء
+    local current = addItemRemote.Parent
+    while current and current ~= game do
+        table.insert(info.ancestry, current.Name)
+        current = current.Parent
+    end
+    
+    -- تحليل الاتصالات (إذا كان في scripts تستخدمه)
+    local connectionsInfo = {
+        serverScripts = 0,
+        clientScripts = 0,
+        localScripts = 0
     }
     
-    -- جرب كل Remote مع كل Payload
-    for _, remote in pairs(remotesToTry) do
-        if remote and remote:IsA("RemoteEvent") then
-            for i, payload in ipairs(dealerPayloads) do
-                local success, result = pcall(function()
-                    remote:FireServer(payload)
-                    return "✅ أرسلت إلى " .. remote.Name
-                end)
-                
-                if success then
-                    return true, "🎉 اخترقنا Dealer! - " .. result
+    -- ابحث عن scripts تستخدم AddItem
+    for _, script in pairs(game:GetDescendants()) do
+        if script:IsA("Script") or script:IsA("LocalScript") then
+            local source = script.Source
+            if source:find("AddItem") then
+                if script:IsA("Script") then
+                    connectionsInfo.serverScripts = connectionsInfo.serverScripts + 1
+                elseif script:IsA("LocalScript") then
+                    connectionsInfo.clientScripts = connectionsInfo.clientScripts + 1
                 end
             end
         end
     end
     
-    return false, "❌ مافيش RemoteEvent ينفع مع Dealer"
+    info.connections = connectionsInfo
+    
+    -- محاولة فهم payload الشكل (عن طريق التدقيق في scripts)
+    local possiblePayloads = {}
+    
+    -- البحث عن أمثلة لاستخدام AddItem
+    for _, script in pairs(game:GetDescendants()) do
+        if (script:IsA("Script") or script:IsA("LocalScript")) and script.Source:find("AddItem") then
+            local source = script.Source
+            -- ابحث عن patterns
+            if source:find("FireServer") and source:find("AddItem") then
+                -- حاول استخراج payload أمثلة
+                local lines = string.split(source, "\n")
+                for _, line in ipairs(lines) do
+                    if line:find("AddItem") and line:find("FireServer") then
+                        -- استخراج ما بين القوسين
+                        local startPos = line:find("%(")
+                        local endPos = line:find("%)")
+                        if startPos and endPos then
+                            local args = line:sub(startPos + 1, endPos - 1)
+                            table.insert(possiblePayloads, "مثال: AddItem:FireServer(" .. args .. ")")
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    info.exampleUsage = possiblePayloads
+    
+    -- تحليل الأسماء المحيطة لفهم النظام
+    local nearbyItems = {}
+    local parent = addItemRemote.Parent
+    if parent then
+        for _, child in pairs(parent:GetChildren()) do
+            if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") then
+                table.insert(nearbyItems, {
+                    name = child.Name,
+                    type = child.ClassName
+                })
+            end
+        end
+    end
+    
+    info.nearbyRemotes = nearbyItems
+    
+    return info, "✅ تم جمع المعلومات"
+end
+
+-- 📋 عرض المعلومات بشكل منظم
+local function formatAddItemInfo(info)
+    if not info then return "❌ لا توجد معلومات" end
+    
+    local text = ""
+    
+    text = text .. "🎯 معلومات AddItem RemoteEvent:\n"
+    text = text .. "=" .. string.rep("=", 40) .. "\n\n"
+    
+    text = text .. "📌 الأساسي:\n"
+    text = text .. "• الاسم: " .. info.name .. "\n"
+    text = text .. "• النوع: " .. info.className .. "\n"
+    text = text .. "• المسار: " .. info.fullPath .. "\n"
+    text = text .. "• الأب: " .. (info.parent or "غير معروف") .. "\n\n"
+    
+    if #info.ancestry > 0 then
+        text = text .. "📂 مسار الآباء:\n"
+        for i, ancestor in ipairs(info.ancestry) do
+            text = text .. string.rep("  ", i) .. "└── " .. ancestor .. "\n"
+        end
+        text = text .. "\n"
+    end
+    
+    text = text .. "🔗 الاتصالات:\n"
+    text = text .. "• سكربتات السيرفر: " .. info.connections.serverScripts .. "\n"
+    text = text .. "• سكربتات العميل: " .. info.connections.clientScripts .. "\n\n"
+    
+    if #info.exampleUsage > 0 then
+        text = text .. "📝 أمثلة استخدام:\n"
+        for i, example in ipairs(info.exampleUsage) do
+            if i <= 3 then -- عرض أول 3 أمثلة فقط
+                text = text .. i .. ". " .. example .. "\n"
+            end
+        end
+        text = text .. "\n"
+    end
+    
+    if #info.nearbyRemotes > 0 then
+        text = text .. "📡 RemoteEvents/Function المجاورة:\n"
+        for _, remote in ipairs(info.nearbyRemotes) do
+            text = text .. "• " .. remote.name .. " (" .. remote.type .. ")\n"
+        end
+    end
+    
+    text = text .. "\n" .. string.rep("=", 40) .. "\n"
+    
+    return text
 end
 
 -- 📱 واجهة الموبايل
-local function createDealerUI()
+local function createMobileUI()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "FruitDealerHack"
+    screenGui.Name = "AddItemInfo"
     screenGui.ResetOnSpawn = false
     
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0.9, 0, 0.45, 0)
-    mainFrame.Position = UDim2.new(0.05, 0, 0.27, 0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    mainFrame.Size = UDim2.new(0.95, 0, 0.5, 0)
+    mainFrame.Position = UDim2.new(0.025, 0, 0.25, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     
     -- العنوان
     local title = Instance.new("TextLabel")
-    title.Text = "🍎 FRUIT DEALER HACK"
-    title.Size = UDim2.new(1, 0, 0.15, 0)
-    title.BackgroundColor3 = Color3.fromRGB(150, 0, 150)
+    title.Text = "🕵️‍♂️ ADDITEM INFO STEALER"
+    title.Size = UDim2.new(1, 0, 0.1, 0)
+    title.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
     title.TextColor3 = Color3.new(1, 1, 1)
     title.Font = Enum.Font.SourceSansBold
     
-    -- زر البحث عن Dealers
-    local findBtn = Instance.new("TextButton")
-    findBtn.Text = "🔍 ابحث عن Fruit Dealer"
-    findBtn.Size = UDim2.new(0.85, 0, 0.15, 0)
-    findBtn.Position = UDim2.new(0.075, 0, 0.2, 0)
-    findBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
-    findBtn.TextColor3 = Color3.new(1, 1, 1)
-    findBtn.Font = Enum.Font.SourceSansBold
+    -- زر جمع المعلومات
+    local gatherBtn = Instance.new("TextButton")
+    gatherBtn.Text = "🔍 جمع معلومات AddItem"
+    gatherBtn.Size = UDim2.new(0.9, 0, 0.12, 0)
+    gatherBtn.Position = UDim2.new(0.05, 0, 0.15, 0)
+    gatherBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+    gatherBtn.TextColor3 = Color3.new(1, 1, 1)
+    gatherBtn.Font = Enum.Font.SourceSansBold
     
-    -- قائمة Dealers
-    local dealersList = Instance.new("TextLabel")
-    dealersList.Text = "لم يتم البحث بعد"
-    dealersList.Size = UDim2.new(0.85, 0, 0.35, 0)
-    dealersList.Position = UDim2.new(0.075, 0, 0.4, 0)
-    dealersList.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    dealersList.TextColor3 = Color3.new(1, 1, 1)
-    dealersList.TextWrapped = true
+    -- زر نسخ المعلومات
+    local copyBtn = Instance.new("TextButton")
+    copyBtn.Text = "📋 نسخ المعلومات"
+    copyBtn.Size = UDim2.new(0.44, 0, 0.1, 0)
+    copyBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
+    copyBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 150)
+    copyBtn.TextColor3 = Color3.new(1, 1, 1)
+    copyBtn.Visible = false
     
-    -- زر الاختراق
-    local hackBtn = Instance.new("TextButton")
-    hackBtn.Text = "⚡ اخترق Dealer الحالي"
-    hackBtn.Size = UDim2.new(0.85, 0, 0.15, 0)
-    hackBtn.Position = UDim2.new(0.075, 0, 0.8, 0)
-    hackBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    hackBtn.TextColor3 = Color3.new(1, 1, 1)
-    hackBtn.Font = Enum.Font.SourceSansBold
-    hackBtn.Visible = false
+    -- زر إظهار في الكونسول
+    local consoleBtn = Instance.new("TextButton")
+    consoleBtn.Text = "📟 عرض في الكونسول"
+    consoleBtn.Size = UDim2.new(0.44, 0, 0.1, 0)
+    consoleBtn.Position = UDim2.new(0.51, 0, 0.3, 0)
+    consoleBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 0)
+    consoleBtn.TextColor3 = Color3.new(1, 1, 1)
+    consoleBtn.Visible = false
+    
+    -- عرض المعلومات
+    local infoFrame = Instance.new("ScrollingFrame")
+    infoFrame.Size = UDim2.new(0.9, 0, 0.55, 0)
+    infoFrame.Position = UDim2.new(0.05, 0, 0.45, 0)
+    infoFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    infoFrame.BorderSizePixel = 1
+    infoFrame.ScrollBarThickness = 8
+    infoFrame.Visible = false
+    
+    local infoText = Instance.new("TextLabel")
+    infoText.Name = "InfoText"
+    infoText.Size = UDim2.new(1, 0, 1, 0)
+    infoText.BackgroundTransparency = 1
+    infoText.TextColor3 = Color3.new(1, 1, 1)
+    infoText.TextXAlignment = Enum.TextXAlignment.Left
+    infoText.TextYAlignment = Enum.TextYAlignment.Top
+    infoText.TextWrapped = true
+    infoText.Font = Enum.Font.SourceSans
+    infoText.TextSize = 14
     
     -- المتغيرات
-    local currentDealers = {}
-    local selectedDealer = nil
+    local currentInfo = nil
+    local currentInfoText = ""
     
-    -- حدث البحث
-    findBtn.MouseButton1Click:Connect(function()
-        findBtn.Text = "⏳ جاري البحث..."
-        dealersList.Text = "🔍 يبحث عن Fruit Dealers..."
+    -- 🔍 حدث جمع المعلومات
+    gatherBtn.MouseButton1Click:Connect(function()
+        gatherBtn.Text = "⏳ يجمع معلومات..."
         
         task.spawn(function()
-            currentDealers = findFruitDealer()
+            local info, message = gatherAddItemInfo()
             
-            if #currentDealers == 0 then
-                dealersList.Text = "❌ مافيش Fruit Dealer\n\n" ..
-                                  "تأكد أنك:\n" ..
-                                  "1. في منطقة بها Dealer\n" ..
-                                  "2. قريب من Dealer\n" ..
-                                  "3. أعد المحاولة"
-                hackBtn.Visible = false
+            if info then
+                currentInfo = info
+                currentInfoText = formatAddItemInfo(info)
+                
+                -- إظهار الأزرار
+                copyBtn.Visible = true
+                consoleBtn.Visible = true
+                infoFrame.Visible = true
+                
+                -- عرض المعلومات
+                infoText.Text = currentInfoText
+                infoText.Parent = infoFrame
+                
+                gatherBtn.Text = "✅ تم الجمع"
+                gatherBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+                
+                print("\n🎯 معلومات AddItem في الكونسول:")
+                print(currentInfoText)
             else
-                local dealerText = "✅ وجد " .. #currentDealers .. " Dealer:\n\n"
-                
-                for i, dealer in ipairs(currentDealers) do
-                    dealerText = dealerText .. i .. ". " .. dealer.name .. "\n"
-                    if dealer.promptText then
-                        dealerText = dealerText .. "   📝: " .. dealer.promptText .. "\n"
-                    end
-                end
-                
-                dealersList.Text = dealerText
-                hackBtn.Visible = true
-                selectedDealer = currentDealers[1]
+                gatherBtn.Text = "❌ فشل الجمع"
+                gatherBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+                print("❌ " .. message)
             end
-            
-            findBtn.Text = "🔍 ابحث عن Fruit Dealer"
         end)
     end)
     
-    -- حدث الاختراق
-    hackBtn.MouseButton1Click:Connect(function()
-        if not selectedDealer then return end
+    -- 📋 حدث نسخ المعلومات
+    copyBtn.MouseButton1Click:Connect(function()
+        if not currentInfoText or currentInfoText == "" then return end
         
-        hackBtn.Text = "💥 يخترق..."
-        dealersList.Text = "⚡ جاري اختراق: " .. selectedDealer.name
+        -- للموبايل: اطبع في الكونسول للنسخ اليدوي
+        print("\n📋 معلومات AddItem للنسخ:")
+        print("=" .. string.rep("=", 50))
+        print(currentInfoText)
+        print("=" .. string.rep("=", 50))
+        print("📱 على الموبايل: اضغط مطولاً على النص وانسخ")
         
-        task.spawn(function()
-            local success, message = hackFruitDealer(selectedDealer.name)
+        copyBtn.Text = "📋 انسخ من الكونسول"
+        task.wait(1)
+        copyBtn.Text = "📋 نسخ المعلومات"
+    end)
+    
+    -- 📟 حدث العرض في الكونسول
+    consoleBtn.MouseButton1Click:Connect(function()
+        if not currentInfoText then return end
+        
+        print("\n" .. string.rep("=", 60))
+        print("🎯 معلومات AddItem الكاملة:")
+        print(string.rep("=", 60))
+        print(currentInfoText)
+        
+        consoleBtn.Text = "✅ معروض"
+        task.wait(1)
+        consoleBtn.Text = "📟 عرض في الكونسول"
+    end)
+    
+    -- زر اختبار AddItem
+    local testBtn = Instance.new("TextButton")
+    testBtn.Text = "⚡ اختبار AddItem"
+    testBtn.Size = UDim2.new(0.9, 0, 0.1, 0)
+    testBtn.Position = UDim2.new(0.05, 0, 0.88, 0)
+    testBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+    testBtn.TextColor3 = Color3.new(1, 1, 1)
+    
+    -- حدث اختبار AddItem
+    testBtn.MouseButton1Click:Connect(function()
+        local addItemRemote = findAddItemRemote()
+        if not addItemRemote then
+            print("❌ AddItem مش موجود للاختبار")
+            return
+        end
+        
+        print("\n🎯 جرب AddItem مع payloads مختلفة...")
+        
+        -- payloads اختبارية
+        local testPayloads = {
+            {itemId = "test_item_1", amount = 1},
+            {item = "token", quantity = 100, player = player.Name},
+            {id = "gem_001", count = 50, receiver = player.UserId},
+            {itemType = "Token", amount = 1000, target = player}
+        }
+        
+        for i, payload in ipairs(testPayloads) do
+            print("\n🔧 جرب Payload " .. i .. "...")
+            
+            local success, result = pcall(function()
+                addItemRemote:FireServer(payload)
+                return "تم الإرسال"
+            end)
             
             if success then
-                dealersList.Text = message
-                dealersList.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
+                print("✅ Payload " .. i .. " ناجح!")
             else
-                dealersList.Text = message
-                dealersList.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+                print("❌ Payload " .. i .. " فشل")
             end
             
-            hackBtn.Text = "⚡ اخترق Dealer الحالي"
-        end)
+            task.wait(0.3)
+        end
+        
+        testBtn.Text = "✅ تم الاختبار"
+        task.wait(1)
+        testBtn.Text = "⚡ اختبار AddItem"
     end)
     
     -- التجميع
+    infoText.Parent = infoFrame
     title.Parent = mainFrame
-    findBtn.Parent = mainFrame
-    dealersList.Parent = mainFrame
-    hackBtn.Parent = mainFrame
+    gatherBtn.Parent = mainFrame
+    copyBtn.Parent = mainFrame
+    consoleBtn.Parent = mainFrame
+    infoFrame.Parent = mainFrame
+    testBtn.Parent = mainFrame
     mainFrame.Parent = screenGui
     screenGui.Parent = player.PlayerGui
     
@@ -229,57 +369,77 @@ local function createDealerUI()
 end
 
 -- أوامر الكونسول
-_G.FindDealers = function()
-    return findFruitDealer()
+_G.GetAddItemInfo = function()
+    local info, message = gatherAddItemInfo()
+    if info then
+        local text = formatAddItemInfo(info)
+        print(text)
+        return "✅ تم جمع المعلومات"
+    else
+        return "❌ " .. message
+    end
 end
 
-_G.HackDealer = function(dealerName)
-    if not dealerName then
-        local dealers = findFruitDealer()
-        if #dealers == 0 then return "❌ مافيش Dealers" end
+_G.TestAddItem = function()
+    local addItemRemote = findAddItemRemote()
+    if not addItemRemote then return "❌ AddItem مش موجود" end
+    
+    print("🎯 جرب AddItem...")
+    
+    local payloads = {
+        {itemId = "test_token", amount = 100},
+        {item = "gem", quantity = 50, player = player.Name}
+    }
+    
+    for i, payload in ipairs(payloads) do
+        local success, _ = pcall(function()
+            addItemRemote:FireServer(payload)
+        end)
         
-        print("🎯 Dealers المتاحة:")
-        for i, dealer in ipairs(dealers) do
-            print(i .. ". " .. dealer.name)
+        if success then
+            print("✅ Payload " .. i .. " ناجح")
+        else
+            print("❌ Payload " .. i .. " فشل")
         end
-        return "أدخل اسم Dealer"
     end
     
-    return hackFruitDealer(dealerName)
+    return "تم الاختبار"
 end
 
-_G.AutoHackDealers = function()
-    local dealers = findFruitDealer()
-    if #dealers == 0 then return "❌ مافيش Dealers" end
-    
-    for i, dealer in ipairs(dealers) do
-        print("🎯 [" .. i .. "] يخترق: " .. dealer.name)
-        hackFruitDealer(dealer.name)
-        task.wait(0.5)
-    end
-    
-    return "جربت اختراق " .. #dealers .. " Dealer"
-end
-
--- بدء التشغيل
+-- تشغيل
 print([[
     
-🍎 FRUIT DEALER HACK
-🎯 اختراق Fruit Dealer العشوائي في Blox Fruits
+🕵️‍♂️ ADDITEM INFO STEALER
+🎯 جمع معلومات AddItem RemoteEvent
 
-🔍 Dealer هو:
-• NPC يبيع فواكه عشوائية
-• موجود في الجزر المختلفة
-• سعره من 50k إلى 100k Beli
+🔍 يبحث عن:
+ReplicatedStorage.GameEvents.TradeEvents.AddItem
+
+📋 المعلومات المجمعة:
+1. المسار الكامل
+2. الآباء والأجداد  
+3. سكربتات متصلة
+4. أمثلة استخدام
+5. RemoteEvents مجاورة
 
 ⚡ الأوامر:
-_G.FindDealers() - البحث عن Dealers
-_G.HackDealer("اسم_Dealer") - اختراق Dealer
-_G.AutoHackDealers() - اختراق كل Dealers
+_G.GetAddItemInfo() - جمع وعرض المعلومات
+_G.TestAddItem() - اختبار AddItem
 
 ]])
 
 -- إنشاء الواجهة
-createDealerUI()
+createMobileUI()
 
-print("✅ Fruit Dealer Hack جاهز!")
+-- البحث التلقائي
+task.spawn(function()
+    task.wait(2)
+    local remote = findAddItemRemote()
+    if remote then
+        print("✅ AddItem موجود وجاهز للتحليل!")
+    else
+        print("❌ AddItem مش موجود في المسار المتوقع")
+    end
+end)
+
+print("✅ AddItem Info Stealer جاهز!")
