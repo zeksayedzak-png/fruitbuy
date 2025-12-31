@@ -1,160 +1,157 @@
--- RF/GiftFunction Info Grabber
--- يعمل على الهاتف
+-- Pet Simulator 99 Purchase Hacker
+-- يعمل على الهاتف في loadstring
 
 local rs = game:GetService("ReplicatedStorage")
 local plr = game.Players.LocalPlayer
 
--- نجيب الريموت
-local giftRemote
-local success, err = pcall(function()
-    giftRemote = rs:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RF/GiftFunction")
-end)
+-- أهم الريمورتات للاختراق
+local remotes = {
+    FakePurchase = rs:WaitForChild("GameEvents"):WaitForChild("Market"):WaitForChild("FakePurchase"),
+    DeveloperPurchase = rs:WaitForChild("GameEvents"):WaitForChild("DeveloperPurchase"),
+    ClaimSeasonPassReward = rs:WaitForChild("GameEvents"):WaitForChild("SeasonPass"):WaitForChild("ClaimSeasonPassReward"),
+    BuyPetEgg = rs:WaitForChild("GameEvents"):WaitForChild("BuyPetEgg"),
+    BuyRebirth = rs:WaitForChild("GameEvents"):WaitForChild("BuyRebirth")
+}
 
--- نخزن المعلومات
-local collectedInfo = ""
-
--- نعمل واجهة
+-- واجهة الهاتف
 local ui = Instance.new("ScreenGui")
-ui.Name = "GiftInfo"
+ui.Name = "PurchaseHacker"
 ui.ResetOnSpawn = false
 
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0.9, 0, 0.45, 0)
-main.Position = UDim2.new(0.05, 0, 0.5, 0)
-main.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+main.Size = UDim2.new(0.9, 0, 0.5, 0)
+main.Position = UDim2.new(0.05, 0, 0.45, 0)
+main.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+main.BorderColor3 = Color3.fromRGB(255, 0, 0)
 
 local title = Instance.new("TextLabel")
-title.Text = "🔍 RF/GiftFunction Info"
-title.Size = UDim2.new(1, 0, 0.12, 0)
-title.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+title.Text = "🔥 PURCHASE HACKER"
+title.Size = UDim2.new(1, 0, 0.1, 0)
+title.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.SourceSansBold
 
-local infoBox = Instance.new("TextLabel")
-infoBox.Text = "جاري فحص الريموت..."
-infoBox.Size = UDim2.new(1, 0, 0.58, 0)
-infoBox.Position = UDim2.new(0, 0, 0.12, 0)
-infoBox.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-infoBox.TextColor3 = Color3.new(1, 1, 1)
-infoBox.TextWrapped = true
-infoBox.TextXAlignment = Enum.TextXAlignment.Left
-infoBox.TextYAlignment = Enum.TextYAlignment.Top
+local status = Instance.new("TextLabel")
+status.Text = "✅ جاهز للاختراق!"
+status.Size = UDim2.new(1, 0, 0.15, 0)
+status.Position = UDim2.new(0, 0, 0.1, 0)
+status.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+status.TextColor3 = Color3.new(1, 1, 1)
+status.TextWrapped = true
 
-local testBtn = Instance.new("TextButton")
-testBtn.Text = "🧪 تجربة الريموت"
-testBtn.Size = UDim2.new(0.44, 0, 0.12, 0)
-testBtn.Position = UDim2.new(0.03, 0, 0.72, 0)
-testBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 80)
-testBtn.TextColor3 = Color3.new(1, 1, 1)
+-- أزرار الاختراق
+local buttons = {}
 
-local copyBtn = Instance.new("TextButton") -- زر النسخ الجديد
-copyBtn.Text = "📋 نسخ المعلومات"
-copyBtn.Size = UDim2.new(0.44, 0, 0.12, 0)
-copyBtn.Position = UDim2.new(0.53, 0, 0.72, 0)
-copyBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 200)
-copyBtn.TextColor3 = Color3.new(1, 1, 1)
+local function createButton(name, yPos, color)
+    local btn = Instance.new("TextButton")
+    btn.Text = name
+    btn.Size = UDim2.new(0.9, 0, 0.12, 0)
+    btn.Position = UDim2.new(0.05, 0, yPos, 0)
+    btn.BackgroundColor3 = color
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.Parent = main
+    return btn
+end
 
-local closeBtn = Instance.new("TextButton")
-closeBtn.Text = "❌ إغلاق"
-closeBtn.Size = UDim2.new(0.9, 0, 0.12, 0)
-closeBtn.Position = UDim2.new(0.05, 0, 0.85, 0)
-closeBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-closeBtn.TextColor3 = Color3.new(1, 1, 1)
+-- إنشاء الأزرار
+buttons.fakePurchase = createButton("💳 FakePurchase", 0.27, Color3.fromRGB(200, 0, 0))
+buttons.devPurchase = createButton("👨‍💻 DeveloperPurchase", 0.41, Color3.fromRGB(0, 150, 200))
+buttons.claimReward = createButton("🎁 ClaimSeasonPass", 0.55, Color3.fromRGB(0, 180, 0))
+buttons.buyEgg = createButton("🥚 BuyPetEgg", 0.69, Color3.fromRGB(180, 0, 180))
+buttons.massHack = createButton("💥 MASS HACK ALL", 0.83, Color3.fromRGB(255, 100, 0))
 
--- نضيف للحافظة
+-- نضيف كل حاجة
 title.Parent = main
-infoBox.Parent = main
-testBtn.Parent = main
-copyBtn.Parent = main
-closeBtn.Parent = main
+status.Parent = main
 main.Parent = ui
 ui.Parent = plr:WaitForChild("PlayerGui")
 
--- دالة نسخ للحافظة
-local function copyToClip(text)
-    if setclipboard then
-        setclipboard(text)
-        return true
+-- دالة الاختراق
+local function hackFakePurchase()
+    status.Text = "💳 جاري اختراق FakePurchase..."
+    
+    for i = 1, 10 do
+        pcall(function()
+            remotes.FakePurchase:FireServer("HugePet", 1, 0) -- حيوان ضخم مجاناً
+            remotes.FakePurchase:FireServer("ExclusiveEgg", 5, 0) -- بيض حصري
+            remotes.FakePurchase:FireServer("RainbowCoin", 1000, 0) -- عملة
+        end)
+        task.wait(0.2)
     end
-    return false
+    
+    status.Text = "✅ FakePurchase تم اختراقه!"
 end
 
--- دالة فحص الريموت
-local function analyzeRemote()
-    if not giftRemote then
-        infoBox.Text = "❌ الريموت مش موجود!"
-        return
-    end
+local function hackDevPurchase()
+    status.Text = "👨‍💻 جاري اختراق DeveloperPurchase..."
     
-    local info = "📊 معلومات RF/GiftFunction:\n\n"
-    
-    -- معلومات أساسية
-    info = info .. "🔹 النوع: " .. giftRemote.ClassName .. "\n"
-    info = info .. "🔹 الاسم: " .. giftRemote.Name .. "\n\n"
-    
-    -- عدد المرات اللي اتصلت فيه
-    local testResults = ""
-    local argTests = {
-        {},
-        {"Gift"},
-        {"ChristmasGift"},
-        {"DailyGift"},
-        {1},
-        {true}
-    }
-    
-    infoBox.Text = "🔬 جاري اختبار الريموت..."
-    
-    for i, args in ipairs(argTests) do
-        local result = pcall(function()
-            return giftRemote:InvokeServer(unpack(args))
+    for i = 1, 20 do
+        pcall(function()
+            remotes.DeveloperPurchase:InvokeServer("GodMode", true)
+            remotes.DeveloperPurchase:InvokeServer("UnlockAll", plr)
+            remotes.DeveloperPurchase:InvokeServer("MaxCurrency", 999999)
         end)
-        
-        if result then
-            testResults = testResults .. "✅ Test " .. i .. ": نجح\n"
-        else
-            testResults = testResults .. "❌ Test " .. i .. ": فشل\n"
-        end
-        
         task.wait(0.1)
     end
     
-    info = info .. "📋 نتائج الاختبار:\n" .. testResults .. "\n"
+    status.Text = "✅ DeveloperPurchase تم اختراقه!"
+end
+
+local function hackSeasonPass()
+    status.Text = "🎁 جاري اختراق SeasonPass..."
     
-    -- نعرض النتيجة
-    collectedInfo = info
-    infoBox.Text = info
+    for level = 1, 100 do
+        pcall(function()
+            remotes.ClaimSeasonPassReward:FireServer(level, "PremiumReward")
+            remotes.ClaimSeasonPassReward:FireServer(level, "FreeReward")
+        end)
+        task.wait(0.05)
+    end
+    
+    status.Text = "✅ SeasonPass تم اختراقه!"
+end
+
+local function hackPetEggs()
+    status.Text = "🥚 جاري اختراق PetEggs..."
+    
+    local eggTypes = {"HugeEgg", "RainbowEgg", "GoldenEgg", "MythicalEgg", "ExclusiveEgg"}
+    
+    for _, egg in ipairs(eggTypes) do
+        for i = 1, 5 do
+            pcall(function()
+                remotes.BuyPetEgg:FireServer(egg, 999)
+            end)
+            task.wait(0.1)
+        end
+    end
+    
+    status.Text = "✅ PetEggs تم اختراقه!"
+end
+
+local function massHackAll()
+    status.Text = "💥 جاري اختراق كل شيء..."
+    
+    hackFakePurchase()
+    task.wait(1)
+    hackDevPurchase()
+    task.wait(1)
+    hackSeasonPass()
+    task.wait(1)
+    hackPetEggs()
+    
+    status.Text = "💣 كل شيء تم اختراقه!"
 end
 
 -- أحداث الأزرار
-testBtn.MouseButton1Click:Connect(function()
-    testBtn.Text = "⏳ جاري الفحص..."
-    task.spawn(analyzeRemote)
-    testBtn.Text = "🧪 تجربة الريموت"
-end)
+buttons.fakePurchase.MouseButton1Click:Connect(hackFakePurchase)
+buttons.devPurchase.MouseButton1Click:Connect(hackDevPurchase)
+buttons.claimReward.MouseButton1Click:Connect(hackSeasonPass)
+buttons.buyEgg.MouseButton1Click:Connect(hackPetEggs)
+buttons.massHack.MouseButton1Click:Connect(massHackAll)
 
-copyBtn.MouseButton1Click:Connect(function() -- حدث زر النسخ
-    if collectedInfo and collectedInfo ~= "" then
-        if copyToClip(collectedInfo) then
-            copyBtn.Text = "✅ تم النسخ!"
-            task.wait(1)
-            copyBtn.Text = "📋 نسخ المعلومات"
-        else
-            copyBtn.Text = "❌ فشل النسخ"
-            task.wait(1)
-            copyBtn.Text = "📋 نسخ المعلومات"
-        end
-    else
-        copyBtn.Text = "⚠️ لا توجد معلومات"
-        task.wait(1)
-        copyBtn.Text = "📋 نسخ المعلومات"
-    end
-end)
-
-closeBtn.MouseButton1Click:Connect(function()
-    ui:Destroy()
-end)
-
--- نبدأ الفحص التلقائي
-task.wait(1)
-analyzeRemote()
+print("🔥 Purchase Hacker - جاهز للاستخدام!")
+print("💳 FakePurchase - للشراء المزيف")
+print("👨‍💻 DeveloperPurchase - وضع المطور")
+print("🎁 SeasonPass - مكافآت الموسم")
+print("🥚 PetEggs - شراء البيض")
