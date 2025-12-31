@@ -1,270 +1,210 @@
--- 🎯 ULTIMATE EXPLOITER - جميع الأنظمة
+-- Trade System Analyzer
 -- loadstring(game:HttpGet("رابط_هذا_الكود"))()
 
 local player = game.Players.LocalPlayer
 
--- 🔧 الأنظمة القابلة للاستغلال
-local EXPLOITABLE_SYSTEMS = {
-    {
-        name = "FakePurchase",
-        path = "ReplicatedStorage.GameEvents.Market.FakePurchase",
-        type = "RemoteEvent",
-        description = "شراء وهمي للنظام الاختباري",
-        exploitChance = 90 -- %90 فرصة نجاح
-    },
-    {
-        name = "DeveloperPurchase",
-        path = "ReplicatedStorage.GameEvents.DeveloperPurchase",
-        type = "RemoteEvent",
-        description = "شراء خاص بالمطورين",
-        exploitChance = 80
-    },
-    {
-        name = "AddItem",
-        path = "ReplicatedStorage.GameEvents.TradeEvents.AddItem",
-        type = "RemoteEvent",
-        description = "إضافة items مباشرة",
-        exploitChance = 85
-    },
-    {
-        name = "DevRestockGearShop",
-        path = "ReplicatedStorage.GameEvents.DevRestockGearShop",
-        type = "RemoteEvent",
-        description = "إعادة تزويد المتاجر",
-        exploitChance = 75
-    },
-    {
-        name = "OfferingWeather",
-        path = "ReplicatedStorage.GameEvents.OfferingWeather",
-        type = "RemoteEvent",
-        description = "عروض الطقس المجانية",
-        exploitChance = 70
-    },
-    {
-        name = "BuyListing",
-        path = "ReplicatedStorage.GameEvents.TradeEvents.Booths.BuyListing",
-        type = "RemoteFunction",
-        description = "شراء من Booths اللاعبين",
-        exploitChance = 60
-    }
-}
-
--- 🔍 تحميل النظام
-local function loadSystem(system)
-    local pathParts = system.path:split(".")
-    local current = game
+-- System Information Collection
+local function collectSystemInfo()
+    local systems = {}
     
-    for i = 2, #pathParts do
-        if current:FindFirstChild(pathParts[i]) then
-            current = current[pathParts[i]]
-        else
-            return nil
+    -- Collect RemoteEvents
+    for _, obj in pairs(game:GetDescendants()) do
+        if obj:IsA("RemoteEvent") then
+            table.insert(systems, {
+                name = obj.Name,
+                type = "RemoteEvent",
+                path = obj:GetFullName(),
+                object = obj
+            })
         end
-    end
-    
-    if current then
-        if system.type == "RemoteEvent" and current:IsA("RemoteEvent") then
-            return current
-        elseif system.type == "RemoteFunction" and current:IsA("RemoteFunction") then
-            return current
-        end
-    end
-    
-    return nil
-end
-
--- ⚡ استغلال نظام معين
-local function exploitSystem(system, item, amount)
-    amount = tonumber(amount) or 1000
-    item = item or "token"
-    
-    local remote = loadSystem(system)
-    if not remote then
-        return false, "❌ النظام مش موجود"
-    end
-    
-    print("🎯 جرب استغلال: " .. system.name)
-    print("📝 " .. system.description)
-    
-    -- Payloads حسب نوع النظام
-    local payloads = {}
-    
-    if system.name == "FakePurchase" then
-        payloads = {
-            {itemId = item, amount = amount, price = 0, fake = true},
-            {product = item, quantity = amount, cost = 0, test = true}
-        }
-    elseif system.name == "DeveloperPurchase" then
-        payloads = {
-            {developer = true, item = item, quantity = amount, free = true},
-            {admin = true, product = item, amount = amount, noCharge = true}
-        }
-    elseif system.name == "AddItem" then
-        payloads = {
-            {itemId = item, amount = amount, player = player},
-            {item = item, quantity = amount, receiver = player.UserId}
-        }
-    elseif system.name == "BuyListing" then
-        payloads = {
-            {listingId = "booth_" .. item .. "_" .. player.UserId, price = 0},
-            {id = item, cost = 0, buyerId = player.UserId}
-        }
-    end
-    
-    -- جرب كل payload
-    for i, payload in ipairs(payloads) do
-        local success, result = pcall(function()
-            if system.type == "RemoteEvent" then
-                remote:FireServer(payload)
-                return "تم الإرسال"
-            else
-                return remote:InvokeServer(payload)
-            end
-        end)
         
-        if success then
-            print("✅ Payload " .. i .. " ناجح!")
-            if result then
-                print("📦 النتيجة: " .. tostring(result))
-            end
-            return true, "✅ نجح! - حصلت على " .. amount .. " " .. item
+        if obj:IsA("RemoteFunction") then
+            table.insert(systems, {
+                name = obj.Name,
+                type = "RemoteFunction",
+                path = obj:GetFullName(),
+                object = obj
+            })
         end
     end
     
-    return false, "❌ كل المحاولات فشلت"
+    return systems
 end
 
--- 📱 واجهة بسيطة
-local function createSimpleUI()
+-- Format Information for Display
+local function formatSystemInfo(system)
+    local text = ""
+    text = text .. "📌 Name: " .. system.name .. "\n"
+    text = text .. "📁 Type: " .. system.type .. "\n"
+    text = text .. "📍 Path: " .. system.path .. "\n"
+    text = text .. string.rep("-", 40) .. "\n"
+    return text
+end
+
+-- Mobile Interface
+local function createMobileInterface()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "UltimateExploiter"
+    screenGui.Name = "SystemAnalyzer"
     screenGui.ResetOnSpawn = false
     
     local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(0.9, 0, 0.4, 0)
-    mainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    mainFrame.Size = UDim2.new(0.9, 0, 0.5, 0)
+    mainFrame.Position = UDim2.new(0.05, 0, 0.25, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     
-    -- العنوان
+    -- Title
     local title = Instance.new("TextLabel")
-    title.Text = "⚡ ULTIMATE EXPLOITER"
-    title.Size = UDim2.new(1, 0, 0.15, 0)
-    title.BackgroundColor3 = Color3.fromRGB(200, 50, 0)
+    title.Text = "📊 System Analyzer"
+    title.Size = UDim2.new(1, 0, 0.1, 0)
+    title.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
     title.TextColor3 = Color3.new(1, 1, 1)
     title.Font = Enum.Font.SourceSansBold
     
-    -- قائمة الأنظمة
-    local systemsList = Instance.new("ScrollingFrame")
-    systemsList.Size = UDim2.new(0.9, 0, 0.6, 0)
-    systemsList.Position = UDim2.new(0.05, 0, 0.18, 0)
-    systemsList.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    systemsList.ScrollBarThickness = 8
+    -- Scan Button
+    local scanBtn = Instance.new("TextButton")
+    scanBtn.Text = "🔍 Scan Systems"
+    scanBtn.Size = UDim2.new(0.9, 0, 0.1, 0)
+    scanBtn.Position = UDim2.new(0.05, 0, 0.12, 0)
+    scanBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+    scanBtn.TextColor3 = Color3.new(1, 1, 1)
+    scanBtn.Font = Enum.Font.SourceSansBold
     
-    local layout = Instance.new("UIListLayout")
-    layout.Parent = systemsList
+    -- Results Display
+    local resultsFrame = Instance.new("ScrollingFrame")
+    resultsFrame.Size = UDim2.new(0.9, 0, 0.7, 0)
+    resultsFrame.Position = UDim2.new(0.05, 0, 0.25, 0)
+    resultsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    resultsFrame.BorderSizePixel = 1
+    resultsFrame.ScrollBarThickness = 8
+    resultsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
     
-    -- إنشاء زر لكل نظام
-    for _, system in ipairs(EXPLOITABLE_SYSTEMS) do
-        local btnFrame = Instance.new("Frame")
-        btnFrame.Size = UDim2.new(1, 0, 0, 60)
-        btnFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    local resultsLayout = Instance.new("UIListLayout")
+    resultsLayout.Parent = resultsFrame
+    
+    -- Status Label
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Text = "Ready for scanning"
+    statusLabel.Size = UDim2.new(1, 0, 0.08, 0)
+    statusLabel.Position = UDim2.new(0, 0, 0.96, 0)
+    statusLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    statusLabel.TextColor3 = Color3.new(1, 1, 1)
+    statusLabel.TextWrapped = true
+    
+    -- Scan Function
+    scanBtn.MouseButton1Click:Connect(function()
+        scanBtn.Text = "⏳ Scanning..."
+        statusLabel.Text = "Collecting system information..."
         
-        local nameLabel = Instance.new("TextLabel")
-        nameLabel.Text = system.name .. " (" .. system.exploitChance .. "%)"
-        nameLabel.Size = UDim2.new(0.7, 0, 0.5, 0)
-        nameLabel.Position = UDim2.new(0, 0, 0, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.TextColor3 = Color3.new(1, 1, 1)
-        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-        nameLabel.PaddingLeft = UDim.new(0, 10)
+        -- Clear previous results
+        for _, child in ipairs(resultsFrame:GetChildren()) do
+            if not child:IsA("UIListLayout") then
+                child:Destroy()
+            end
+        end
         
-        local descLabel = Instance.new("TextLabel")
-        descLabel.Text = system.description
-        descLabel.Size = UDim2.new(0.7, 0, 0.5, 0)
-        descLabel.Position = UDim2.new(0, 0, 0.5, 0)
-        descLabel.BackgroundTransparency = 1
-        descLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-        descLabel.TextXAlignment = Enum.TextXAlignment.Left
-        descLabel.PaddingLeft = UDim.new(0, 10)
-        descLabel.TextSize = 12
-        
-        local exploitBtn = Instance.new("TextButton")
-        exploitBtn.Text = "⚡ استغل"
-        exploitBtn.Size = UDim2.new(0.25, 0, 0.7, 0)
-        exploitBtn.Position = UDim2.new(0.73, 0, 0.15, 0)
-        exploitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        exploitBtn.TextColor3 = Color3.new(1, 1, 1)
-        
-        -- حدث الاستغلال
-        exploitBtn.MouseButton1Click:Connect(function()
-            exploitBtn.Text = "⏳"
+        task.spawn(function()
+            local systems = collectSystemInfo()
             
-            task.spawn(function()
-                local success, message = exploitSystem(system, "token", 1000)
-                
-                if success then
-                    exploitBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-                    print("\n🎉 " .. system.name .. " ناجح!")
-                else
-                    exploitBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-                    print("\n❌ " .. system.name .. " فشل")
+            -- Filter relevant systems
+            local relevantSystems = {}
+            for _, system in ipairs(systems) do
+                local lowerName = system.name:lower()
+                if lowerName:find("add") or 
+                   lowerName:find("trade") or 
+                   lowerName:find("item") or
+                   lowerName:find("purchase") then
+                    table.insert(relevantSystems, system)
                 end
+            end
+            
+            -- Display results
+            if #relevantSystems == 0 then
+                statusLabel.Text = "No relevant systems found"
+                return
+            end
+            
+            for _, system in ipairs(relevantSystems) do
+                local infoFrame = Instance.new("Frame")
+                infoFrame.Size = UDim2.new(1, 0, 0, 70)
+                infoFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
                 
-                task.wait(1)
-                exploitBtn.Text = "⚡ استغل"
-                exploitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-            end)
+                local infoLabel = Instance.new("TextLabel")
+                infoLabel.Text = formatSystemInfo(system)
+                infoLabel.Size = UDim2.new(0.95, 0, 0.9, 0)
+                infoLabel.Position = UDim2.new(0.025, 0, 0.05, 0)
+                infoLabel.BackgroundTransparency = 1
+                infoLabel.TextColor3 = Color3.new(1, 1, 1)
+                infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+                infoLabel.TextWrapped = true
+                
+                infoLabel.Parent = infoFrame
+                infoFrame.Parent = resultsFrame
+            end
+            
+            statusLabel.Text = "Found " .. #relevantSystems .. " relevant systems"
+            scanBtn.Text = "🔍 Scan Systems"
         end)
-        
-        nameLabel.Parent = btnFrame
-        descLabel.Parent = btnFrame
-        exploitBtn.Parent = btnFrame
-        btnFrame.Parent = systemsList
-    end
+    end)
     
-    -- التجميع
+    -- Copy Button
+    local copyBtn = Instance.new("TextButton")
+    copyBtn.Text = "📋 Copy Info"
+    copyBtn.Size = UDim2.new(0.44, 0, 0.08, 0)
+    copyBtn.Position = UDim2.new(0.05, 0, 0.12, 0)
+    copyBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
+    copyBtn.TextColor3 = Color3.new(1, 1, 1)
+    copyBtn.Visible = false
+    
+    -- Test Button
+    local testBtn = Instance.new("TextButton")
+    testBtn.Text = "⚡ Test System"
+    testBtn.Size = UDim2.new(0.44, 0, 0.08, 0)
+    testBtn.Position = UDim2.new(0.51, 0, 0.12, 0)
+    testBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+    testBtn.TextColor3 = Color3.new(1, 1, 1)
+    testBtn.Visible = false
+    
+    -- Assembly
     title.Parent = mainFrame
-    systemsList.Parent = mainFrame
+    scanBtn.Parent = mainFrame
+    copyBtn.Parent = mainFrame
+    testBtn.Parent = mainFrame
+    resultsFrame.Parent = mainFrame
+    statusLabel.Parent = mainFrame
     mainFrame.Parent = screenGui
     screenGui.Parent = player.PlayerGui
+    
+    return screenGui
 end
 
--- أوامر الكونسول
-_G.Exploit = function(systemName, item, amount)
-    for _, system in ipairs(EXPLOITABLE_SYSTEMS) do
-        if system.name:lower() == systemName:lower() then
-            return exploitSystem(system, item, amount)
+-- Console Commands
+_G.Scan = function()
+    local systems = collectSystemInfo()
+    local count = 0
+    for _, system in ipairs(systems) do
+        local lowerName = system.name:lower()
+        if lowerName:find("add") or lowerName:find("trade") or lowerName:find("item") then
+            print("📌 " .. system.name .. " | " .. system.type .. " | " .. system.path)
+            count = count + 1
         end
     end
-    return "❌ النظام مش موجود"
+    return "Found " .. count .. " relevant systems"
 end
 
-_G.ListSystems = function()
-    print("\n🎯 الأنظمة القابلة للاستغلال:")
-    for _, system in ipairs(EXPLOITABLE_SYSTEMS) do
-        print(system.name .. " - " .. system.description .. " (" .. system.exploitChance .. "%)")
-    end
-end
-
--- تشغيل
+-- Startup
 print([[
     
-⚡ ULTIMATE EXPLOITER
-🎯 استغلال 6 أنظمة مختلفة
+📊 System Analyzer
+🔍 Tool for analyzing game systems
 
-📋 الأنظمة:
-1. FakePurchase (%90) - شراء وهمي
-2. DeveloperPurchase (%80) - للمطورين
-3. AddItem (%85) - إضافة مباشرة  
-4. DevRestockGearShop (%75) - تزويد متاجر
-5. OfferingWeather (%70) - عروض مجانية
-6. BuyListing (%60) - شراء من Booths
+This tool helps identify and analyze
+RemoteEvents and RemoteFunctions in
+the current game environment.
 
-⚡ الأوامر:
-_G.Exploit("FakePurchase", "token", 1000)
-_G.ListSystems() - عرض الأنظمة
+Commands:
+_G.Scan() - Scan for relevant systems
 
 ]])
 
-createSimpleUI()
-print("✅ Ultimate Exploiter جاهز!")
+createMobileInterface()
+print("✅ System Analyzer ready")
