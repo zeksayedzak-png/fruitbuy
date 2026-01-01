@@ -1,225 +1,225 @@
--- 🎰 GACHA HACK SYSTEM
--- Mobile Version
+-- 🎰 GACHA FORCE HACK
+-- Mobile Version - NO SEARCH
 -- loadstring(game:HttpGet("YOUR_GITHUB_URL"))()
 
 local plr = game.Players.LocalPlayer
 local rs = game:GetService("ReplicatedStorage")
 
--- 🔍 البحث عن الغاتشا
-local function findGachaSystem()
-    -- كل المسارات المحتملة للغاتشا
-    local gachaPaths = {
-        rs.Controllers.UI.GachaWindow,
-        rs.GachaSystem,
-        rs.Gacha,
-        rs.Lootbox,
-        rs.ChestSystem,
-        rs.Rewards,
-        rs.PremiumGacha,
-        rs.GachaController
-    }
+-- 🎯 الأوامر المباشرة بدون بحث
+local function forceGachaHack()
+    print("💣 بدء الهجوم المباشر على الغاتشا!")
     
-    for _, path in pairs(gachaPaths) do
-        if path then
-            return path
-        end
-    end
+    -- 🔥 الهجوم على كل الـ Remotes في اللعبة
+    local hacked = 0
     
-    -- بحث متعمق
     for _, obj in pairs(rs:GetDescendants()) do
-        local name = obj.Name:lower()
-        if name:find("gacha") or name:find("lootbox") or name:find("chest") then
-            return obj
-        end
-    end
-    
-    return nil
-end
-
--- 🎰 تفعيل الغاتشا المجانية
-local function exploitGacha()
-    print("🎰 جاري اختراق الغاتشا...")
-    
-    local gachaSystem = findGachaSystem()
-    
-    if not gachaSystem then
-        print("❌ ما لقيتش نظام غاتشا")
-        return
-    end
-    
-    print("✅ وجدت نظام الغاتشا: " .. gachaSystem:GetFullName())
-    
-    -- 🔥 الطريقة 1: إرسال طلب spin مجاني
-    local function method1_freeSpin()
-        print("🔄 المحاولة 1: Spin مجاني")
-        
-        local remoteEvents = {}
-        for _, child in pairs(gachaSystem:GetDescendants()) do
-            if child:IsA("RemoteEvent") then
-                table.insert(remoteEvents, child)
-            end
-        end
-        
-        for _, remote in pairs(remoteEvents) do
-            -- جرب كل الأوامر الممكنة
-            local commands = {
-                "spin_free",
-                "free_spin", 
-                "gacha_spin",
-                "roll_free",
-                "open_free",
-                "claim_free_spin",
-                "daily_spin"
-            }
+        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+            local name = obj.Name:lower()
             
-            for _, cmd in pairs(commands) do
-                pcall(function()
-                    remote:FireServer(cmd)
-                    print("   🔥 أمر: " .. cmd)
-                end)
-                task.wait(0.1)
-            end
-        end
-    end
-    
-    -- 🔥 الطريقة 2: تخطي التحقق
-    local function method2_bypassCheck()
-        print("🔄 المحاولة 2: تخطي التحقق")
-        
-        local fakePurchase = {
-            purchased = true,
-            productId = 999999,
-            price = 0,
-            currency = "FREE",
-            receipt = "GACHA_HACK_" .. os.time(),
-            playerId = plr.UserId
-        }
-        
-        for _, remote in pairs(gachaSystem:GetDescendants()) do
-            if remote:IsA("RemoteEvent") then
-                pcall(function()
-                    remote:FireServer("verify_purchase", fakePurchase)
-                    remote:FireServer("confirm_purchase", fakePurchase)
-                end)
-            end
-        end
-    end
-    
-    -- 🔥 الطريقة 3: Claim مكافآت وهمية
-    local function method3_fakeRewards()
-        print("🔄 المحاولة 3: مكافآت وهمية")
-        
-        local rewards = {
-            {rarity = "LEGENDARY", item = "Leopard-Fruit"},
-            {rarity = "MYTHICAL", item = "Dragon-Fruit"},
-            {rarity = "RARE", item = "Venom-Fruit"},
-            {rarity = "EPIC", item = "Dough-Fruit"}
-        }
-        
-        for _, reward in pairs(rewards) do
-            local fakeReward = {
-                rewardType = reward.rarity,
-                itemName = reward.item,
-                amount = 1,
-                timestamp = os.time(),
-                valid = true
-            }
-            
-            for _, remote in pairs(gachaSystem:GetDescendants()) do
-                if remote:IsA("RemoteEvent") then
+            -- إذا كان اسمه متعلق بالغاتشا أو المكافآت
+            if name:find("gacha") or name:find("spin") or name:find("roll") or 
+               name:find("chest") or name:find("loot") or name:find("reward") then
+                
+                print("🎯 وجدت: " .. obj:GetFullName())
+                
+                -- 💥 الهجوم 1: طلب spin مجاني
+                for i = 1, 10 do
                     pcall(function()
-                        remote:FireServer("claim_reward", fakeReward)
-                        remote:FireServer("reward_collected", fakeReward)
+                        if obj:IsA("RemoteEvent") then
+                            obj:FireServer("SPIN_FREE")
+                            obj:FireServer("FREE_SPIN")
+                            obj:FireServer("OPEN_CHEST")
+                        else
+                            obj:InvokeServer("SPIN_FREE")
+                            obj:InvokeServer("FREE_SPIN")
+                        end
+                        hacked = hacked + 1
                     end)
+                    task.wait(0.05)
+                end
+                
+                -- 💥 الهجوم 2: بيانات شراء مزيفة
+                local fakePurchase = {
+                    productId = 999999,
+                    purchased = true,
+                    price = 0,
+                    currency = "FREE",
+                    receipt = "HACKED_" .. os.time(),
+                    playerId = plr.UserId,
+                    success = true
+                }
+                
+                for i = 1, 5 do
+                    pcall(function()
+                        if obj:IsA("RemoteEvent") then
+                            obj:FireServer("PURCHASE_COMPLETE", fakePurchase)
+                            obj:FireServer("VERIFY_PURCHASE", fakePurchase)
+                        end
+                        hacked = hacked + 1
+                    end)
+                    task.wait(0.05)
+                end
+                
+                -- 💥 الهجوم 3: مطالبة بمكافآت
+                local rewards = {
+                    "LEOPARD_FRUIT",
+                    "DRAGON_FRUIT", 
+                    "DOUGH_FRUIT",
+                    "VENOM_FRUIT",
+                    "SHADOW_FRUIT",
+                    "RUMBLE_FRUIT",
+                    "PHOENIX_FRUIT",
+                    "GRAVITY_FRUIT"
+                }
+                
+                for _, reward in pairs(rewards) do
+                    local fakeReward = {
+                        item = reward,
+                        rarity = "LEGENDARY",
+                        amount = 999,
+                        fromGacha = true,
+                        timestamp = os.time()
+                    }
+                    
+                    pcall(function()
+                        if obj:IsA("RemoteEvent") then
+                            obj:FireServer("CLAIM_REWARD", fakeReward)
+                            obj:FireServer("REWARD_COLLECTED", fakeReward)
+                        end
+                        hacked = hacked + 1
+                    end)
+                    task.wait(0.03)
                 end
             end
-            task.wait(0.2)
         end
     end
     
-    -- 🔥 الطريقة 4: تعديل الـ Cooldown
-    local function method4_removeCooldown()
-        print("🔄 المحاولة 4: إزالة وقت الانتظار")
+    -- 💣 هجوم إضافي على مسارات معروفة
+    local knownPaths = {
+        "ReplicatedStorage.GachaSystem",
+        "ReplicatedStorage.LootboxSystem",
+        "ReplicatedStorage.RewardsSystem",
+        "ReplicatedStorage.PremiumGacha",
+        "ReplicatedStorage.GachaController",
+        "ReplicatedStorage.Controllers.UI.GachaWindow",
+        "ReplicatedStorage.Controllers.Gacha"
+    }
+    
+    for _, path in pairs(knownPaths) do
+        local target = game
+        for part in path:gmatch("[^%.]+") do
+            target = target:FindFirstChild(part)
+            if not target then break end
+        end
         
-        local cooldownData = {
-            cooldown = 0,
-            nextSpin = 0,
-            unlimited = true,
-            bypass = true
-        }
-        
-        for _, remote in pairs(gachaSystem:GetDescendants()) do
-            if remote:IsA("RemoteEvent") then
-                pcall(function()
-                    remote:FireServer("update_cooldown", cooldownData)
-                    remote:FireServer("reset_cooldown")
-                end)
+        if target then
+            print("💣 هجوم مباشر على: " .. path)
+            
+            -- هجوم شامل على كل الأطفال
+            for _, child in pairs(target:GetDescendants()) do
+                if child:IsA("RemoteEvent") then
+                    for i = 1, 3 do
+                        pcall(function()
+                            child:FireServer("FORCE_SPIN")
+                            child:FireServer("UNLOCK_ALL")
+                            hacked = hacked + 1
+                        end)
+                    end
+                end
             end
         end
     end
     
-    -- تشغيل كل الطرق
-    method1_freeSpin()
-    task.wait(1)
-    method2_bypassCheck()
-    task.wait(1)
-    method3_fakeRewards()
-    task.wait(1)
-    method4_removeCooldown()
+    -- 💥 إرسال طلبات عامة لكل الـ Remotes
+    print("💣 هجوم شامل على كل الـ Remotes...")
     
-    print("✅ اكتمل اختراق الغاتشا!")
+    local allRemotes = {}
+    for _, obj in pairs(rs:GetDescendants()) do
+        if obj:IsA("RemoteEvent") then
+            table.insert(allRemotes, obj)
+        end
+    end
+    
+    for _, remote in pairs(allRemotes) do
+        -- محاولة أوامر عامة
+        local commands = {
+            "GACHA_SPIN",
+            "FREE_REWARD", 
+            "CLAIM_DAILY",
+            "OPEN_ALL_CHESTS",
+            "GET_PREMIUM_REWARDS",
+            "UNLOCK_GACHA",
+            "RESET_COOLDOWN"
+        }
+        
+        for _, cmd in pairs(commands) do
+            pcall(function()
+                remote:FireServer(cmd)
+                hacked = hacked + 1
+            end)
+            task.wait(0.01)
+        end
+    end
+    
+    return hacked
 end
 
--- 📱 واجهة الهاتف
+-- 📱 واجهة الهجوم المباشر
 local ui = Instance.new("ScreenGui")
-ui.Name = "GachaHack"
+ui.Name = "GachaForceHack"
 ui.ResetOnSpawn = false
 
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0.35, 0, 0.3, 0)
+main.Size = UDim2.new(0.35, 0, 0.25, 0)
 main.Position = UDim2.new(0.6, 0, 0.1, 0)
-main.BackgroundColor3 = Color3.fromRGB(40, 30, 50)
+main.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
 main.Active = true
 main.Draggable = true
 
 local title = Instance.new("TextLabel")
-title.Text = "🎰 GACHA HACK"
-title.Size = UDim2.new(1, 0, 0.15, 0)
-title.BackgroundColor3 = Color3.fromRGB(150, 0, 200)
+title.Text = "💣 GACHA FORCE HACK"
+title.Size = UDim2.new(1, 0, 0.2, 0)
+title.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+title.TextColor3 = Color3.new(1, 1, 1)
 
-local hackBtn = Instance.new("TextButton")
-hackBtn.Text = "⚡ اختراق الغاتشا"
-hackBtn.Size = UDim2.new(0.9, 0, 0.4, 0)
-hackBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
-hackBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
+local nukeBtn = Instance.new("TextButton")
+nukeBtn.Text = "💥 NUKE GACHA SYSTEM"
+nukeBtn.Size = UDim2.new(0.9, 0, 0.5, 0)
+nukeBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
+nukeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+nukeBtn.TextColor3 = Color3.new(1, 1, 1)
 
 local status = Instance.new("TextLabel")
-status.Text = "جاهز لاختراق الغاتشا"
-status.Size = UDim2.new(0.9, 0, 0.3, 0)
-status.Position = UDim2.new(0.05, 0, 0.65, 0)
-status.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-status.TextWrapped = true
+status.Text = "جاهز لتدمير الغاتشا!"
+status.Size = UDim2.new(0.9, 0, 0.2, 0)
+status.Position = UDim2.new(0.05, 0, 0.8, 0)
+status.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+status.TextColor3 = Color3.new(1, 1, 1)
 
--- الأحداث
-hackBtn.MouseButton1Click:Connect(function()
-    hackBtn.Text = "🎰 جاري الاختراق..."
-    status.Text = "🔍 يبحث عن نظام الغاتشا..."
+-- حدث النوك
+nukeBtn.MouseButton1Click:Connect(function()
+    nukeBtn.Text = "💣 جاري التفجير..."
+    status.Text = "🔥 هجوم شامل على كل الأنظمة..."
     
     task.spawn(function()
-        exploitGacha()
+        local attacks = forceGachaHack()
         
-        hackBtn.Text = "⚡ اختراق الغاتشا"
-        status.Text = "✅ اكتمل الاختراق!\nتحقق من المكافآت!"
+        nukeBtn.Text = "💥 NUKE GACHA SYSTEM"
+        status.Text = "✅ تم " .. attacks .. " هجوم!\nتحقق من المكافآت!"
+        
+        task.wait(3)
+        status.Text = "⚡ جاهز لهجوم جديد!"
     end)
 end)
 
 -- التجميع
 title.Parent = main
-hackBtn.Parent = main
+nukeBtn.Parent = main
 status.Parent = main
 main.Parent = ui
 ui.Parent = plr.PlayerGui
 
-print("🎰 GACHA HACK SYSTEM READY!")
-print("⚡ 4 طرق مختلفة للاختراق")
-print("🎁 الحصول على فواكه نادرة مجاناً")
+print("💣 GACHA FORCE HACK - READY!")
+print("⚡ هجوم مباشر بدون بحث")
+print("💥 يضرب كل الـ Remotes في اللعبة")
+print("🎰 يحاول يكسر أي نظام غاتشا")
