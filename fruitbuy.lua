@@ -1,254 +1,327 @@
 -- ============================================
--- 🎮 DUPEGOD SYSTEM: Freeze + Duplication
+-- 🧠 QUANTUM FRUIT DUPLICATION
 -- ============================================
 
 local plr = game.Players.LocalPlayer
+local rs = game:GetService("ReplicatedStorage")
 local gui = plr.PlayerGui
 
--- الأزرار
-local inventoryBtn = gui:WaitForChild("Main"):WaitForChild("InventoryButton")
-local dialogueBtn = gui:WaitForChild("Main"):WaitForChild("Dialogue"):WaitForChild("Option3")
-local hotbarBtn = gui:WaitForChild("Backpack"):WaitForChild("Hotbar"):WaitForChild("Container"):WaitForChild("More"):WaitForChild("TextButton")
+-- إيجاد النظام الأساسي
+local inventorySystem = rs:FindFirstChild("InventorySystem") 
+local fruitSystem = rs:FindFirstChild("FruitSystem")
+local dataSystem = rs:FindFirstChild("DataSystem")
 
--- نظام التجميد المتقدم
-local FreezeSystem = {
-    active = false,
-    freezeTime = 0.3, -- ثلث ثانية تجميد
-    originalProperties = {},
-    
-    freeze = function(self, button)
-        if self.active then return end
-        
-        print("❄️ جاري تجميد الزر: " .. button.Name)
-        self.active = true
-        
-        -- حفظ الخصائص الأصلية
-        self.originalProperties = {
-            active = button.Active,
-            autoButtonColor = button.AutoButtonColor,
-            backgroundColor = button.BackgroundColor3,
-            text = button.Text,
-            textColor = button.TextColor3
-        }
-        
-        -- التجميد الفعلي
-        button.Active = false
-        button.AutoButtonColor = false
-        button.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
-        button.Text = "❄️ FROZEN"
-        button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        
-        -- منع أي ضغط
-        for _, connection in pairs(getconnections(button.MouseButton1Click)) do
-            connection:Disable()
-        end
-        
-        -- مؤقت التجميد
-        task.spawn(function()
-            task.wait(self.freezeTime)
-            self:unfreeze(button)
-        end)
-    end,
-    
-    unfreeze = function(self, button)
-        if not self.active then return end
-        
-        print("✅ فك تجميد الزر")
-        
-        -- استعادة الخصائص
-        button.Active = self.originalProperties.active
-        button.AutoButtonColor = self.originalProperties.autoButtonColor
-        button.BackgroundColor3 = self.originalProperties.backgroundColor
-        button.Text = self.originalProperties.text
-        button.TextColor3 = self.originalProperties.textColor
-        
-        -- إعادة تفعيل الضغط
-        for _, connection in pairs(getconnections(button.MouseButton1Click)) do
-            connection:Enable()
-        end
-        
-        self.active = false
-    end
+-- الحالات الكمومية للفاكهة
+local QuantumFruit = {
+    states = {
+        "Hotbar",      -- الحالة 1
+        "Transition",  -- الحالة 2 (الحرجة)
+        "Inventory"    -- الحالة 3
+    },
+    currentState = 1,
+    superposition = false, -- تراكب كمي
+    entangled = false      -- تشابك كمي
 }
 
 -- ============================================
--- 🎯 عملية الدوبليكيشن بالتجميد
+-- 🎯 الخطة العميقة: Superposition
 -- ============================================
 
-local function executePerfectDuplication()
-    print("\n" .. string.rep("=", 50))
-    print("🎮 DUPEGOD SYSTEM ACTIVATED")
-    print(string.rep("=", 50))
+local function quantumSuperposition()
+    print("🌀 تفعيل التراكب الكمومي للفاكهة...")
     
-    -- 🔄 الخطوة 1: فتح الشنطة
-    print("1. 📦 فتح الإنفنتوري...")
-    guaranteedClick(inventoryBtn)
-    task.wait(0.3)
+    -- جعل الفاكهة في حالتين معاً
+    QuantumFruit.superposition = true
     
-    -- 🔄 الخطوة 2: إخراج الفاكهة
-    print("2. 🎯 إخراج الفاكهة من الهوتبار...")
-    guaranteedClick(hotbarBtn)
-    task.wait(0.1)
-    
-    -- 🔄 الخطوة 3: التجميد في اللحظة الحرجة
-    print("3. ❄️ تجميد زر الدخول في اللحظة الحرجة...")
-    
-    -- هنا الفاكهة خرجت لكن لسة ما دخلتش الشنطة
-    -- النظام بيحسب إن الفاكهة في حالة "انتقال"
-    FreezeSystem:freeze(dialogueBtn)
-    
-    -- 🔄 الخطوة 4: محاولة إدخال بالفريز
-    print("4. ⚡ محاولة إدخال أثناء التجميد...")
-    
-    -- أول محاولة (أثناء التجميد)
-    for i = 1, 3 do
-        pcall(function()
-            dialogueBtn.MouseButton1Click:Fire()
-        end)
-        task.wait(0.05)
+    -- 1. أرسل للسيرفر إن الفاكهة في الهوتبار
+    if inventorySystem then
+        inventorySystem:FireServer("UpdateFruitLocation", {
+            fruitName = "Dragon",
+            location = "Hotbar",
+            player = plr
+        })
     end
     
-    -- 🔄 الخطوة 5: فك التجميد بسرعة
-    task.wait(0.15)
-    FreezeSystem:unfreeze(dialogueBtn)
+    -- 2. في نفس الوقت، أرسل إنها في الشنطة
+    task.spawn(function()
+        inventorySystem:FireServer("UpdateFruitLocation", {
+            fruitName = "Dragon", 
+            location = "Inventory",
+            player = plr
+        })
+    end)
     
-    -- 🔄 الخطوة 6: محاولة إدخال ثانية
-    print("5. 🔄 محاولة إدخال بعد فك التجميد...")
-    for i = 1, 3 do
-        guaranteedClick(dialogueBtn)
-        task.wait(0.05)
+    -- 3. جعل النظام في حيرة
+    for i = 1, 10 do
+        local randomState = math.random(1, 3)
+        inventorySystem:FireServer("FruitState", {
+            state = QuantumFruit.states[randomState],
+            timestamp = os.time() + i * 0.001
+        })
+        task.wait(0.01)
     end
-    
-    -- 🔄 الخطوة 7: التهيئة
-    print("6. 🎉 إكمال العملية...")
-    task.wait(0.3)
-    
-    -- 🔄 الخطوة 8: إغلاق الشنطة وفتحها للتحقق
-    guaranteedClick(inventoryBtn) -- إغلاق
-    task.wait(0.2)
-    guaranteedClick(inventoryBtn) -- فتح
-    
-    print("\n✅ العملية اكتملت!")
-    print("🔍 تحقق من عدد الفاكهة في الشنطة")
-    print(string.rep("=", 50))
 end
 
 -- ============================================
--- 🎯 نظام التوقيت الذكي
+-- 🎯 الخطة: Memory Address Freeze
 -- ============================================
 
-local function smartTimingDuplication()
-    -- هذا النظام بيحسب التوقيت بدقة
-    local timings = {
-        openInventory = 0.3,
-        extractFruit = 0.1,
-        freezeStart = 0.15, -- بعد 0.15 ثانية من الإخراج
-        freezeDuration = 0.25,
-        attemptDuringFreeze = 0.05,
-        attemptAfterFreeze = 0.1
+local function memoryAddressFreeze()
+    print("💾 تجميد عنوان الذاكرة...")
+    
+    -- نظرية: كل فاكهة ليها ID في الذاكرة
+    -- لو وقفنا تحديث هذا ID، الفاكهة ممكن تتكرر
+    
+    -- 1. إيجاد الـ Remotes المسؤولة عن تحديث البيانات
+    local updateRemotes = {}
+    for _, obj in pairs(rs:GetDescendants()) do
+        if obj:IsA("RemoteEvent") then
+            local name = obj.Name:lower()
+            if name:find("update") or name:find("refresh") then
+                table.insert(updateRemotes, obj)
+            end
+        end
+    end
+    
+    -- 2. إرسال بيانات تجميد
+    local freezeData = {
+        action = "freeze",
+        timestamp = os.time(),
+        duration = 999,
+        target = "fruit_data"
     }
     
-    print("⏱️ نظام التوقيت الذكي مفعل")
-    
-    -- التسلسل الزمني
-    local timeline = game:GetService("RunService").Heartbeat:Connect(function(delta)
-        -- هنا ممكن نتحكم في كل خطوة بدقة
-    end)
-    
-    executePerfectDuplication()
+    for _, remote in pairs(updateRemotes) do
+        for i = 1, 5 do
+            remote:FireServer(freezeData)
+            task.wait(0.02)
+        end
+    end
 end
 
 -- ============================================
--- 📱 واجهة DUPEGOD
+-- 🎯 الخطة: Packet Interception & Duplication
 -- ============================================
 
-local dupeUI = Instance.new("ScreenGui")
-dupeUI.Name = "DupeGodUI"
-dupeUI.ResetOnSpawn = false
-
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0.3, 0, 0.25, 0)
-mainFrame.Position = UDim2.new(0.7, 0, 0.05, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-mainFrame.Active = true
-mainFrame.Draggable = true
-
--- زر التجميد فقط
-local freezeBtn = Instance.new("TextButton")
-freezeBtn.Text = "❄️ تجميد زر الدخول"
-freezeBtn.Size = UDim2.new(0.9, 0, 0.3, 0)
-freezeBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
-freezeBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-
--- زر الدوب الكامل
-local dupeBtn = Instance.new("TextButton")
-dupeBtn.Text = "🎮 تشغيل دوبليكيشن كامل"
-dupeBtn.Size = UDim2.new(0.9, 0, 0.3, 0)
-dupeBtn.Position = UDim2.new(0.05, 0, 0.45, 0)
-dupeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
-
--- إعدادات التجميد
-local freezeSlider = Instance.new("TextLabel")
-freezeSlider.Text = "⏱️ وقت التجميد: 0.3s"
-freezeSlider.Size = UDim2.new(0.9, 0, 0.15, 0)
-freezeSlider.Position = UDim2.new(0.05, 0, 0.8, 0)
-freezeSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-
--- الأحداث
-freezeBtn.MouseButton1Click:Connect(function()
-    FreezeSystem:freeze(dialogueBtn)
-    task.wait(FreezeSystem.freezeTime)
-    FreezeSystem:unfreeze(dialogueBtn)
-end)
-
-dupeBtn.MouseButton1Click:Connect(function()
-    dupeBtn.Text = "⚡ جاري..."
-    task.spawn(function()
-        executePerfectDuplication()
-        task.wait(2)
-        dupeBtn.Text = "🎮 تشغيل دوبليكيشن كامل"
-    end)
-end)
-
--- التحكم في وقت التجميد
-freezeSlider.MouseButton1Click:Connect(function()
-    FreezeSystem.freezeTime = FreezeSystem.freezeTime + 0.1
-    if FreezeSystem.freezeTime > 1 then
-        FreezeSystem.freezeTime = 0.1
+local function packetInterception()
+    print("📦 اعتراض وتكرار الباكيتات...")
+    
+    -- نظرية: لو اعترضنا باكيت "الفاكهة خرجت" وكررناه
+    -- النظام هيحسب إن الفاكهة اتكررت
+    
+    -- محاكاة اعتراض الباكيتات
+    local interceptedPackets = {}
+    
+    -- مراقبة كل الـ Remotes
+    for _, remote in pairs(rs:GetDescendants()) do
+        if remote:IsA("RemoteEvent") then
+            -- حفظ الوظيفة الأصلية
+            local originalFire = remote.FireServer
+            
+            -- استبدالها بوظيفة تعترض
+            remote.FireServer = function(self, ...)
+                local args = {...}
+                
+                -- إذا كان الباكيت عن الفاكهة
+                if type(args[1]) == "table" and args[1].fruit then
+                    print("🎯 اعترض باكيت فاكهة:", args[1].fruit)
+                    
+                    -- حفظ الباكيت
+                    table.insert(interceptedPackets, {
+                        remote = remote,
+                        data = args[1],
+                        time = os.time()
+                    })
+                    
+                    -- إرسال الباكيت الأصلي
+                    originalFire(self, ...)
+                    
+                    -- بعد 0.05 ثانية، أرسل نسخة منه
+                    task.wait(0.05)
+                    print("🔄 إرسال نسخة مكررة...")
+                    originalFire(self, ...)
+                    
+                    return
+                end
+                
+                -- إرسال عادي لباقي الباكيتات
+                originalFire(self, ...)
+            end
+        end
     end
-    freezeSlider.Text = "⏱️ وقت التجميد: " .. FreezeSystem.freezeTime .. "s"
-end)
+end
 
--- التجميع
-freezeBtn.Parent = mainFrame
-dupeBtn.Parent = mainFrame
-freezeSlider.Parent = mainFrame
-mainFrame.Parent = dupeUI
-dupeUI.Parent = gui
+-- ============================================
+-- 🎯 الخطة: Time Glitch
+-- ============================================
+
+local function timeGlitch()
+    print("⏰ خدعة الزمن...")
+    
+    -- خدعة: جعل النظام يحسب الوقت غلط
+    
+    -- 1. أرسل بيانات ب timestamp قديم
+    local oldData = {
+        action = "add_fruit",
+        fruit = "Dragon",
+        timestamp = os.time() - 3600, -- قبل ساعة
+        location = "Inventory"
+    }
+    
+    -- 2. أرسل بيانات بنفس timestamp الحالي
+    local currentData = {
+        action = "add_fruit", 
+        fruit = "Dragon",
+        timestamp = os.time(),
+        location = "Inventory"
+    }
+    
+    -- 3. النظام ممكن يحسب إنها فاكهتين مختلفتين
+    for i = 1, 3 do
+        inventorySystem:FireServer(oldData)
+        inventorySystem:FireServer(currentData)
+        task.wait(0.1)
+    end
+end
+
+-- ============================================
+-- 🎯 الخطة: Database Desync
+-- ============================================
+
+local function databaseDesync()
+    print("🗄️ إحداث عدم تزامن في قاعدة البيانات...")
+    
+    -- جعل قاعدة بيانات الكلاينت تختلف عن السيرفر
+    
+    -- 1. تعديل بيانات الكلاينت محلياً
+    local localFruitCount = 1
+    local replicatedCount = 0
+    
+    -- 2. إرسال بيانات متناقضة
+    local conflictingData = {
+        -- نسخة 1: عندي فاكهة واحدة
+        {
+            fruitCount = 1,
+            source = "client_cache",
+            checksum = "WRONG_CHECKSUM_123"
+        },
+        
+        -- نسخة 2: عندي فاكهتين  
+        {
+            fruitCount = 2,
+            source = "client_memory", 
+            checksum = "ANOTHER_WRONG_456"
+        },
+        
+        -- نسخة 3: ما عنديش فاكهة
+        {
+            fruitCount = 0,
+            source = "client_temp",
+            checksum = "WRONG_AGAIN_789"
+        }
+    }
+    
+    -- 3. إرسال كل النسخ بسرعة
+    for _, data in pairs(conflictingData) do
+        inventorySystem:FireServer("UpdateFruitData", data)
+        task.wait(0.03)
+    end
+end
+
+-- ============================================
+-- 📱 واجهة التحكم العميقة
+-- ============================================
+
+local deepUI = Instance.new("ScreenGui")
+deepUI.Name = "QuantumDupeUI"
+deepUI.ResetOnSpawn = false
+
+local controlFrame = Instance.new("Frame")
+controlFrame.Size = UDim2.new(0.35, 0, 0.45, 0)
+controlFrame.Position = UDim2.new(0.6, 0, 0.1, 0)
+controlFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+controlFrame.Active = true
+controlFrame.Draggable = true
+
+-- عنوان
+local title = Instance.new("TextLabel")
+title.Text = "🧠 QUANTUM DUPLICATION"
+title.Size = UDim2.new(1, 0, 0.1, 0)
+title.BackgroundColor3 = Color3.fromRGB(30, 0, 50)
+title.TextColor3 = Color3.fromRGB(150, 255, 150)
+
+-- ازرار الخطط العميقة
+local deepPlans = {
+    {name = "🌀 التراكب الكمومي", func = quantumSuperposition, color = Color3.fromRGB(100, 0, 200)},
+    {name = "💾 تجميد الذاكرة", func = memoryAddressFreeze, color = Color3.fromRGB(0, 100, 200)},
+    {name = "📦 اعتراض الباكيتات", func = packetInterception, color = Color3.fromRGB(200, 100, 0)},
+    {name = "⏰ خدعة الزمن", func = timeGlitch, color = Color3.fromRGB(200, 0, 100)},
+    {name = "🗄️ عدم تزامن DB", func = databaseDesync, color = Color3.fromRGB(0, 200, 100)},
+    {name = "💥 كل الخطط معاً", func = function()
+        quantumSuperposition()
+        task.wait(0.5)
+        memoryAddressFreeze()
+        task.wait(0.5)
+        packetInterception()
+        task.wait(0.5)
+        timeGlitch()
+        task.wait(0.5)
+        databaseDesync()
+    end, color = Color3.fromRGB(255, 50, 50)}
+}
+
+for i, plan in ipairs(deepPlans) do
+    local btn = Instance.new("TextButton")
+    btn.Text = plan.name
+    btn.Size = UDim2.new(0.9, 0, 0.12, 0)
+    btn.Position = UDim2.new(0.05, 0, 0.12 + (i * 0.13), 0)
+    btn.BackgroundColor3 = plan.color
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    
+    btn.MouseButton1Click:Connect(function()
+        btn.Text = "⚡ جاري..."
+        task.spawn(function()
+            pcall(plan.func)
+            task.wait(2)
+            btn.Text = plan.name
+        end)
+    end)
+    
+    btn.Parent = controlFrame
+end
+
+title.Parent = controlFrame
+controlFrame.Parent = deepUI
+deepUI.Parent = gui
 
 -- ============================================
 -- 📢 التعليمات
 -- ============================================
 print([[
     
-🎮 DUPEGOD SYSTEM INSTRUCTIONS:
+🧠 QUANTUM DUPLICATION SYSTEM:
 
-1. ❄️ زر "تجميد زر الدخول"
-   - بيجمد الزر فقط للاختبار
+🌀 التراكب الكمومي:
+- جعل الفاكهة في حالات متعددة معاً
+- النظام مش عارف هي فين
 
-2. 🎮 زر "تشغيل دوبليكيشن كامل"
-   - بتنفيذ العملية كاملة:
-     • فتح الشنطة
-     • إخراج الفاكهة  
-     • تجميد في اللحظة الحرجة
-     • محاولات إدخال متعددة
-     • تحقق من النتيجة
+💾 تجميد الذاكرة:  
+- وقف تحديث بيانات الفاكهة
+- النظام يفضل يحسب البيانات القديمة
 
-3. ⏱️ وقت التجميد
-   - اضغط على الوقت لتغييره (0.1s - 1s)
+📦 اعتراض الباكيتات:
+- تكرار إشارات نقل الفاكهة
+- النظام يحسب إن الفاكهة اتنقلت مرتين
 
-🎯 الفكرة: تجميد الزر في اللحظة اللي الفاكهة
-          بتكون فيها خارج الهوتبار لكن
-          لسة ما دخلتش الشنطة!
+⏰ خدعة الزمن:
+- إرسال بيانات ب timestamps مختلفة
+- النظام يحسب كل مرة كفاكهة جديدة
+
+🗄️ عدم تزامن DB:
+- إرسال بيانات متناقضة
+- قاعدة بيانات السيرفر تتشوش
+
+🎯 الهدف: جعل النظام في حيرة كاملة
+           عن حالة الفاكهة الحقيقية!
 
 ]])
