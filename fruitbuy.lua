@@ -1,225 +1,189 @@
--- 🎰 GACHA FORCE HACK
--- Mobile Version - NO SEARCH
+-- 🌿 GROW A GARDEN ULTIMATE HACK
+-- Mobile Version
 -- loadstring(game:HttpGet("YOUR_GITHUB_URL"))()
 
 local plr = game.Players.LocalPlayer
 local rs = game:GetService("ReplicatedStorage")
 
--- 🎯 الأوامر المباشرة بدون بحث
-local function forceGachaHack()
-    print("💣 بدء الهجوم المباشر على الغاتشا!")
+-- 💥 الهجوم المباشر بدون بحث
+local function nuclearAttack()
+    print("💣 بدء الهجوم النووي على Grow a Garden!")
     
-    -- 🔥 الهجوم على كل الـ Remotes في اللعبة
-    local hacked = 0
+    local attacks = 0
     
-    for _, obj in pairs(rs:GetDescendants()) do
-        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-            local name = obj.Name:lower()
-            
-            -- إذا كان اسمه متعلق بالغاتشا أو المكافآت
-            if name:find("gacha") or name:find("spin") or name:find("roll") or 
-               name:find("chest") or name:find("loot") or name:find("reward") then
-                
-                print("🎯 وجدت: " .. obj:GetFullName())
-                
-                -- 💥 الهجوم 1: طلب spin مجاني
-                for i = 1, 10 do
-                    pcall(function()
-                        if obj:IsA("RemoteEvent") then
-                            obj:FireServer("SPIN_FREE")
-                            obj:FireServer("FREE_SPIN")
-                            obj:FireServer("OPEN_CHEST")
-                        else
-                            obj:InvokeServer("SPIN_FREE")
-                            obj:InvokeServer("FREE_SPIN")
-                        end
-                        hacked = hacked + 1
-                    end)
-                    task.wait(0.05)
-                end
-                
-                -- 💥 الهجوم 2: بيانات شراء مزيفة
-                local fakePurchase = {
-                    productId = 999999,
-                    purchased = true,
-                    price = 0,
-                    currency = "FREE",
-                    receipt = "HACKED_" .. os.time(),
-                    playerId = plr.UserId,
-                    success = true
-                }
-                
-                for i = 1, 5 do
-                    pcall(function()
-                        if obj:IsA("RemoteEvent") then
-                            obj:FireServer("PURCHASE_COMPLETE", fakePurchase)
-                            obj:FireServer("VERIFY_PURCHASE", fakePurchase)
-                        end
-                        hacked = hacked + 1
-                    end)
-                    task.wait(0.05)
-                end
-                
-                -- 💥 الهجوم 3: مطالبة بمكافآت
-                local rewards = {
-                    "LEOPARD_FRUIT",
-                    "DRAGON_FRUIT", 
-                    "DOUGH_FRUIT",
-                    "VENOM_FRUIT",
-                    "SHADOW_FRUIT",
-                    "RUMBLE_FRUIT",
-                    "PHOENIX_FRUIT",
-                    "GRAVITY_FRUIT"
-                }
-                
-                for _, reward in pairs(rewards) do
-                    local fakeReward = {
-                        item = reward,
-                        rarity = "LEGENDARY",
-                        amount = 999,
-                        fromGacha = true,
-                        timestamp = os.time()
-                    }
-                    
-                    pcall(function()
-                        if obj:IsA("RemoteEvent") then
-                            obj:FireServer("CLAIM_REWARD", fakeReward)
-                            obj:FireServer("REWARD_COLLECTED", fakeReward)
-                        end
-                        hacked = hacked + 1
-                    end)
-                    task.wait(0.03)
-                end
-            end
-        end
-    end
-    
-    -- 💣 هجوم إضافي على مسارات معروفة
-    local knownPaths = {
-        "ReplicatedStorage.GachaSystem",
-        "ReplicatedStorage.LootboxSystem",
-        "ReplicatedStorage.RewardsSystem",
-        "ReplicatedStorage.PremiumGacha",
-        "ReplicatedStorage.GachaController",
-        "ReplicatedStorage.Controllers.UI.GachaWindow",
-        "ReplicatedStorage.Controllers.Gacha"
-    }
-    
-    for _, path in pairs(knownPaths) do
-        local target = game
-        for part in path:gmatch("[^%.]+") do
-            target = target:FindFirstChild(part)
-            if not target then break end
-        end
+    -- 🔥 1. FakePurchase - الشراء المزيف
+    local fakePurchase = rs.GameEvents.Market.FakePurchase
+    if fakePurchase then
+        print("🎯 FakePurchase وجد!")
         
-        if target then
-            print("💣 هجوم مباشر على: " .. path)
-            
-            -- هجوم شامل على كل الأطفال
-            for _, child in pairs(target:GetDescendants()) do
-                if child:IsA("RemoteEvent") then
-                    for i = 1, 3 do
-                        pcall(function()
-                            child:FireServer("FORCE_SPIN")
-                            child:FireServer("UNLOCK_ALL")
-                            hacked = hacked + 1
-                        end)
-                    end
-                end
-            end
-        end
-    end
-    
-    -- 💥 إرسال طلبات عامة لكل الـ Remotes
-    print("💣 هجوم شامل على كل الـ Remotes...")
-    
-    local allRemotes = {}
-    for _, obj in pairs(rs:GetDescendants()) do
-        if obj:IsA("RemoteEvent") then
-            table.insert(allRemotes, obj)
-        end
-    end
-    
-    for _, remote in pairs(allRemotes) do
-        -- محاولة أوامر عامة
-        local commands = {
-            "GACHA_SPIN",
-            "FREE_REWARD", 
-            "CLAIM_DAILY",
-            "OPEN_ALL_CHESTS",
-            "GET_PREMIUM_REWARDS",
-            "UNLOCK_GACHA",
-            "RESET_COOLDOWN"
+        -- محاولات شراء مزيفة
+        local fakeItems = {
+            "PREMIUM_MEMBERSHIP",
+            "RAINBOW_SEEDS", 
+            "GOLDEN_WATERING_CAN",
+            "MYTHIC_PET_EGG",
+            "INFINITE_COINS",
+            "ALL_COSMETICS",
+            "UNLOCK_ALL_PLANTS"
         }
         
-        for _, cmd in pairs(commands) do
+        for _, item in pairs(fakeItems) do
             pcall(function()
-                remote:FireServer(cmd)
-                hacked = hacked + 1
+                fakePurchase:FireServer({
+                    action = "purchase",
+                    item = item,
+                    price = 0,
+                    player = plr.Name,
+                    timestamp = os.time()
+                })
+                attacks = attacks + 1
+                print("   ✅ شراء مزيف: " .. item)
             end)
-            task.wait(0.01)
+            task.wait(0.1)
         end
     end
     
-    return hacked
+    -- 🔥 2. أمر givepremium
+    local givepremium = rs.CmdrClient.Commands.givepremium
+    if givepremium then
+        print("🎯 givepremium وجد!")
+        
+        pcall(function()
+            givepremium:FireServer(plr, "lifetime")
+            givepremium:FireServer(plr, "all_features")
+            givepremium:FireServer("activate_premium", plr.UserId)
+            attacks = attacks + 3
+            print("   ✅ بريميوم مفعل!")
+        end)
+    end
+    
+    -- 🔥 3. متجر Robux
+    local robuxBuyPath = "Modules.GardenCoinShopController.ItemFrame.Frame.Robux_Buy"
+    local target = rs
+    for part in robuxBuyPath:gmatch("[^%.]+") do
+        target = target:FindFirstChild(part)
+        if not target then break end
+    end
+    
+    if target and target:IsA("RemoteEvent") then
+        print("🎯 Robux_Buy وجد!")
+        
+        pcall(function()
+            -- شراء كل العملات
+            for i = 1, 10 do
+                target:FireServer({
+                    coins = 1000000,
+                    price = 0,
+                    purchaseId = "FREE_" .. i
+                })
+            end
+            attacks = attacks + 10
+            print("   ✅ عملات مجانية!")
+        end)
+    end
+    
+    -- 🔥 4. نظام Trade
+    local addItem = rs.GameEvents.TradeEvents.AddItem
+    if addItem then
+        print("🎯 نظام Trade وجد!")
+        
+        -- إضافة عناصر للتجارة
+        local rareItems = {
+            "GOLDEN_SEED",
+            "DIAMOND_FLOWER", 
+            "RAINBOW_PETAL",
+            "MYTHIC_FERTILIZER",
+            "INFINITE_WATER"
+        }
+        
+        for _, item in pairs(rareItems) do
+            pcall(function()
+                addItem:FireServer({
+                    item = item,
+                    quantity = 999,
+                    player = plr
+                })
+                attacks = attacks + 1
+            end)
+        end
+    end
+    
+    -- 🔥 5. هجوم على كل الـ Remotes
+    print("💣 هجوم شامل على كل الأنظمة...")
+    
+    for _, obj in pairs(rs:GetDescendants()) do
+        if obj:IsA("RemoteEvent") then
+            local name = obj.Name:lower()
+            
+            -- إذا كان اسمه متعلق بالشراء أو المكافآت
+            if name:find("buy") or name:find("purchase") or 
+               name:find("add") or name:find("get") or
+               name:find("unlock") or name:find("reward") then
+                
+                pcall(function()
+                    obj:FireServer("FREE")
+                    obj:FireServer("UNLOCK_ALL")
+                    attacks = attacks + 1
+                end)
+            end
+        end
+    end
+    
+    return attacks
 end
 
--- 📱 واجهة الهجوم المباشر
+-- 📱 واجهة الهاتف
 local ui = Instance.new("ScreenGui")
-ui.Name = "GachaForceHack"
+ui.Name = "GardenHack"
 ui.ResetOnSpawn = false
 
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0.35, 0, 0.25, 0)
-main.Position = UDim2.new(0.6, 0, 0.1, 0)
-main.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+main.Size = UDim2.new(0.4, 0, 0.25, 0)
+main.Position = UDim2.new(0.55, 0, 0.1, 0)
+main.BackgroundColor3 = Color3.fromRGB(30, 60, 30)
 main.Active = true
 main.Draggable = true
 
 local title = Instance.new("TextLabel")
-title.Text = "💣 GACHA FORCE HACK"
+title.Text = "🌿 GARDEN HACK"
 title.Size = UDim2.new(1, 0, 0.2, 0)
-title.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 
-local nukeBtn = Instance.new("TextButton")
-nukeBtn.Text = "💥 NUKE GACHA SYSTEM"
-nukeBtn.Size = UDim2.new(0.9, 0, 0.5, 0)
-nukeBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
-nukeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-nukeBtn.TextColor3 = Color3.new(1, 1, 1)
+local hackBtn = Instance.new("TextButton")
+hackBtn.Text = "💥 اختراق اللعبة"
+hackBtn.Size = UDim2.new(0.9, 0, 0.5, 0)
+hackBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
+hackBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
 
 local status = Instance.new("TextLabel")
-status.Text = "جاهز لتدمير الغاتشا!"
+status.Text = "Grow a Garden - جاهز للاختراق"
 status.Size = UDim2.new(0.9, 0, 0.2, 0)
 status.Position = UDim2.new(0.05, 0, 0.8, 0)
-status.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-status.TextColor3 = Color3.new(1, 1, 1)
+status.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+status.TextWrapped = true
 
--- حدث النوك
-nukeBtn.MouseButton1Click:Connect(function()
-    nukeBtn.Text = "💣 جاري التفجير..."
-    status.Text = "🔥 هجوم شامل على كل الأنظمة..."
+-- حدث الاختراق
+hackBtn.MouseButton1Click:Connect(function()
+    hackBtn.Text = "💣 جاري الاختراق..."
+    status.Text = "🔥 يهاجم FakePurchase وأوامر Premium..."
     
     task.spawn(function()
-        local attacks = forceGachaHack()
+        local attacks = nuclearAttack()
         
-        nukeBtn.Text = "💥 NUKE GACHA SYSTEM"
-        status.Text = "✅ تم " .. attacks .. " هجوم!\nتحقق من المكافآت!"
-        
-        task.wait(3)
-        status.Text = "⚡ جاهز لهجوم جديد!"
+        hackBtn.Text = "💥 اختراق اللعبة"
+        status.Text = "✅ " .. attacks .. " هجوم ناجح!\nتحقق من مكافآتك!"
     end)
 end)
 
 -- التجميع
 title.Parent = main
-nukeBtn.Parent = main
+hackBtn.Parent = main
 status.Parent = main
 main.Parent = ui
 ui.Parent = plr.PlayerGui
 
-print("💣 GACHA FORCE HACK - READY!")
-print("⚡ هجوم مباشر بدون بحث")
-print("💥 يضرب كل الـ Remotes في اللعبة")
-print("🎰 يحاول يكسر أي نظام غاتشا")
+print("🌿 GROW A GARDEN HACK - READY!")
+print("🎯 FakePurchase - شراء مزيف")
+print("👑 givepremium - بريميوم مجاني")
+print("💰 Robux_Buy - روبوكس مجاني")
+print("🔄 AddItem - عناصر للتجارة")
