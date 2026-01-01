@@ -1,335 +1,294 @@
--- ============================================
--- 🔄 FRUIT TRANSFORMATION EXPLOIT
--- ============================================
+-- 🎯 TOOL COPY-PASTE SYSTEM
+-- Mobile Version
+-- loadstring(game:HttpGet("YOUR_GITHUB_URL"))()
 
 local plr = game.Players.LocalPlayer
 local gui = plr.PlayerGui
-local rs = game:GetService("ReplicatedStorage")
 
--- الأزرار المهمة
-local inventoryBtn = gui:WaitForChild("Main"):WaitForChild("InventoryButton")
-local moveBtn = gui:FindFirstChild("MoveToInventoryButton") or 
-                gui:FindFirstChild("TransferButton") or
-                gui:FindFirstChild("Option3") -- زر النقل
+-- تخزين البيانات
+local copiedData = nil
+local copiedToolName = ""
 
-local hotbarBtn = gui:WaitForChild("Backpack"):WaitForChild("Hotbar"):WaitForChild("Container"):WaitForChild("More"):WaitForChild("TextButton")
-
--- نظام تحويل الفاكهة
-local FruitTransformer = {
-    weakFruit = "Spin-Fruit",      -- الفاكهة الضعيفة اللي عندك
-    strongFruit = "Leopard-Fruit", -- الفاكهة القوية اللي عايزها
-    transformationActive = false,
+-- جلب الأداة من إيدك
+local function getToolInMyHand()
+    local char = plr.Character
+    if not char then return nil end
     
-    -- قائمة الفواكه من الأضعف للأقوى
-    fruits = {
-        "Spin-Fruit", "Chop-Fruit", "Spring-Fruit", "Kilo-Fruit", "Smoke-Fruit",
-        "Spike-Fruit", "Bomb-Fruit", "Flame-Fruit", "Falcon-Fruit", "Ice-Fruit",
-        "Sand-Fruit", "Dark-Fruit", "Diamond-Fruit", "Light-Fruit", "Rubber-Fruit",
-        "Barrier-Fruit", "Ghost-Fruit", "Magma-Fruit", "Quake-Fruit", "Buddha-Fruit",
-        "Love-Fruit", "Spider-Fruit", "Sound-Fruit", "Phoenix-Fruit", "Portal-Fruit",
-        "Rumble-Fruit", "Pain-Fruit", "Blizzard-Fruit", "Gravity-Fruit", "Venom-Fruit",
-        "Shadow-Fruit", "Dragon-Fruit", "Dough-Fruit", "Leopard-Fruit"
-    },
+    -- إبحث في الإيدين
+    local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+    local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm")
     
-    -- إيجاد فاكهة قوية أعلى من عندك
-    findUpgrade = function(self, currentFruit)
-        local currentIndex = nil
-        for i, fruit in ipairs(self.fruits) do
-            if fruit == currentFruit then
-                currentIndex = i
-                break
+    if rightHand then
+        for _, child in pairs(rightHand:GetChildren()) do
+            if child:IsA("Tool") then
+                return child
             end
         end
-        
-        if currentIndex and currentIndex < #self.fruits then
-            return self.fruits[currentIndex + 1] -- الفاكهة التالية
-        end
-        
-        return self.fruits[#self.fruits] -- أقوى فاكهة
     end
-}
-
--- ============================================
--- 🎯 الخطة: التحويل أثناء النقل
--- ============================================
-
-local function executeFruitTransformation()
-    print("🔄 بدء تحويل الفاكهة أثناء النقل...")
     
-    -- 🔄 الخطوة 1: فتح الإنفنتوري والباك باك
-    print("1. 📦 فتح الإنفنتوري والباك باك...")
-    guaranteedClick(inventoryBtn)
-    task.wait(0.3)
-    
-    -- 🔄 الخطوة 2: اختيار فاكهة سيئة من الباك باك
-    print("2. 🎯 اختيار فاكهة سيئة (" .. FruitTransformer.weakFruit .. ")...")
-    -- هنا لازم تختار الفاكهة السيئة يدوياً أولاً
-    
-    -- 🔄 الخطوة 3: الضغط على زر النقل + تغيير البيانات
-    print("3. ⚡ الضغط على زر النقل مع تغيير البيانات...")
-    
-    FruitTransformer.transformationActive = true
-    
-    -- قبل الضغط، نجهز البيانات المزيفة
-    local fakeFruitData = {
-        fruitName = FruitTransformer.strongFruit, -- الفاكهة القوية
-        rarity = "Legendary",
-        value = 5000000,
-        originalFruit = FruitTransformer.weakFruit, -- الفاكهة الأصلية
-        timestamp = os.time(),
-        player = plr.Name,
-        exploit = "mid_transfer_transform"
-    }
-    
-    -- 🔄 الخطوة 4: إرسال بيانات التحويل مع النقل
-    coroutine.wrap(function()
-        -- إرسال بيانات الفاكهة القوية
-        for i = 1, 5 do
-            pcall(function()
-                rs.InventorySystem:FireServer("TransferFruit", fakeFruitData)
-            end)
-            task.wait(0.01)
-        end
-    end)()
-    
-    -- 🔄 الخطوة 5: الضغط الفعلي على زر النقل
-    if moveBtn then
-        for i = 1, 3 do
-            guaranteedClick(moveBtn)
-            task.wait(0.05)
+    if leftHand then
+        for _, child in pairs(leftHand:GetChildren()) do
+            if child:IsA("Tool") then
+                return child
+            end
         end
     end
     
-    -- 🔄 الخطوة 6: إرسال بيانات تأكيد
-    task.wait(0.1)
-    local confirmData = {
-        action = "confirm_transfer",
-        fruit = FruitTransformer.strongFruit,
-        success = true,
-        system_time = os.time()
+    return nil
+end
+
+-- زر 1: نسخ كل حاجة من الأداة
+local function copyEverythingFromTool()
+    local tool = getToolInMyHand()
+    if not tool then
+        return false, "❌ ما في أداة في إيدك"
+    end
+    
+    copiedToolName = tool.Name
+    copiedData = {
+        name = tool.Name,
+        class = tool.ClassName,
+        properties = {},
+        attributes = {},
+        scripts = {}
     }
     
-    for i = 1, 3 do
+    -- 1. نسخ الخصائص
+    local propsToCopy = {
+        "ToolTip", "TextureId", "Grip", "GripForward", "GripPos",
+        "GripRight", "GripUp", "Enabled", "CanBeDropped", "RequiresHandle"
+    }
+    
+    for _, prop in ipairs(propsToCopy) do
         pcall(function()
-            rs.InventorySystem:FireServer("ConfirmTransfer", confirmData)
+            copiedData.properties[prop] = tool[prop]
         end)
-        task.wait(0.05)
     end
     
-    FruitTransformer.transformationActive = false
-    
-    -- 🔄 الخطوة 7: التحقق
-    print("4. ✅ اكتمل التحويل!")
-    print("   📊 من: " .. FruitTransformer.weakFruit)
-    print("   🎯 إلى: " .. FruitTransformer.strongFruit)
-    print("   🔍 تحقق من الإنفنتوري!")
-end
-
--- ============================================
--- 🎯 الخطة: Packet Injection
--- ============================================
-
-local function packetInjectionTransformation()
-    print("💉 حقن باكيتات تحويل...")
-    
-    -- إيجاد الـ RemoteEvents المسؤولة
-    local transferRemotes = {}
-    for _, remote in pairs(rs:GetDescendants()) do
-        if remote:IsA("RemoteEvent") then
-            local name = remote.Name:lower()
-            if name:find("transfer") or name:find("move") or name:find("inventory") then
-                table.insert(transferRemotes, remote)
-            end
-        end
+    -- 2. نسخ ال Attributes
+    for _, attr in pairs(tool:GetAttributes()) do
+        copiedData.attributes[attr] = tool:GetAttribute(attr)
     end
     
-    -- باكيتات التحويل
-    local transformationPackets = {
-        -- باكيت 1: بداية النقل (فاكهة سيئة)
-        {
-            packet_id = "TRANSFER_START",
-            fruit = FruitTransformer.weakFruit,
-            source = "backpack",
-            target = "inventory",
-            time = os.time()
-        },
-        
-        -- باكيت 2: أثناء النقل (تغيير البيانات)
-        {
-            packet_id = "MID_TRANSFER",
-            fruit = FruitTransformer.strongFruit,
-            original_fruit = FruitTransformer.weakFruit,
-            transformed = true,
-            time = os.time() + 0.001
-        },
-        
-        -- باكيت 3: تأكيد النقل (فاكهة قوية)
-        {
-            packet_id = "TRANSFER_COMPLETE",
-            fruit = FruitTransformer.strongFruit,
-            location = "inventory",
-            time = os.time() + 0.002
-        }
-    }
-    
-    -- إرسال الباكيتات بسرعة
-    for _, remote in pairs(transferRemotes) do
-        for _, packet in pairs(transformationPackets) do
-            pcall(function()
-                remote:FireServer(packet)
-            end)
-            task.wait(0.001) -- فرق توقيت بسيط جداً
-        end
-    end
-end
-
--- ============================================
--- 🎯 الخطة: Memory Rewrite
--- ============================================
-
-local function memoryRewrite()
-    print("🧠 إعادة كتابة الذاكرة...")
-    
-    -- نظرية: تغيير بيانات الفاكهة في الذاكرة
-    
-    -- 1. جعل النظام ينسخ الفاكهة الأصلية
-    local copyPacket = {
-        action = "copy_fruit_data",
-        source_fruit = FruitTransformer.weakFruit,
-        timestamp = os.time()
-    }
-    
-    -- 2. تغيير البيانات أثناء النسخ
-    local rewritePacket = {
-        action = "rewrite_fruit_data",
-        original = FruitTransformer.weakFruit,
-        new = FruitTransformer.strongFruit,
-        attributes = {
-            rarity = "Legendary",
-            value = 5000000,
-            abilities = {"Transformation", "Upgrade"}
-        }
-    }
-    
-    -- 3. إرسال متسلسل سريع
-    local remotes = {"InventorySystem", "FruitSystem", "DataSystem"}
-    
-    for _, remoteName in pairs(remotes) do
-        local remote = rs:FindFirstChild(remoteName)
-        if remote and remote:IsA("RemoteEvent") then
-            -- إرسال النسخ
-            remote:FireServer(copyPacket)
-            task.wait(0.001)
-            
-            -- إرسال التغيير
-            remote:FireServer(rewritePacket)
-            task.wait(0.001)
-            
-            -- تأكيد
-            remote:FireServer({
-                action = "confirm_rewrite",
-                fruit = FruitTransformer.strongFruit,
-                success = true
+    -- 3. نسخ السكربتات (الأكواد)
+    for _, script in pairs(tool:GetDescendants()) do
+        if script:IsA("Script") or script:IsA("LocalScript") then
+            table.insert(copiedData.scripts, {
+                name = script.Name,
+                source = script.Source or "",
+                class = script.ClassName
             })
         end
     end
+    
+    return true, "✅ نسخت: " .. tool.Name .. " (" .. #copiedData.scripts .. " سكربت)"
+end
+
+-- زر 2: نسخ للحافظة
+local function copyToClipboard()
+    if not copiedData then
+        return false, "❌ ما في بيانات منسوخة"
+    end
+    
+    local text = "📋 بيانات الأداة:\n"
+    text = text .. "🔧 الإسم: " .. copiedData.name .. "\n"
+    text = text .. "📁 النوع: " .. copiedData.class .. "\n"
+    text = text .. "🏷️ عدد الـ Attributes: " .. #copiedData.attributes .. "\n"
+    text = text .. "📜 عدد السكربتات: " .. #copiedData.scripts .. "\n\n"
+    
+    -- إضافة Attributes
+    text = text .. "Attributes:\n"
+    for attr, value in pairs(copiedData.attributes) do
+        text = text .. "- " .. attr .. ": " .. tostring(value) .. "\n"
+    end
+    
+    -- إضافة أسماء السكربتات
+    if #copiedData.scripts > 0 then
+        text = text .. "\nالسكربتات:\n"
+        for i, script in ipairs(copiedData.scripts) do
+            text = text .. i .. ". " .. script.name .. " (" .. script.class .. ")\n"
+        end
+    end
+    
+    -- النسخ للحافظة
+    if setclipboard then
+        setclipboard(text)
+        return true, "✅ تم النسخ للحافظة!"
+    else
+        return false, "❌ النسخ للحافظة مش شغال"
+    end
+end
+
+-- زر 3: نقل المعلومات لأداة تانيه
+local function pasteToOtherTool()
+    if not copiedData then
+        return false, "❌ ما في بيانات منسوخة"
+    end
+    
+    -- الحصول على الأدوات في الإيدين
+    local tools = {}
+    local char = plr.Character
+    if char then
+        local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+        local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm")
+        
+        if rightHand then
+            for _, child in pairs(rightHand:GetChildren()) do
+                if child:IsA("Tool") then
+                    table.insert(tools, child)
+                end
+            end
+        end
+        
+        if leftHand then
+            for _, child in pairs(leftHand:GetChildren()) do
+                if child:IsA("Tool") then
+                    table.insert(tools, child)
+                end
+            end
+        end
+    end
+    
+    if #tools < 2 then
+        return false, "❌ تحتاج أداتين في إيديك"
+    end
+    
+    -- الأداة الثانية (اللي هتنقل لها)
+    local targetTool = tools[2]
+    
+    -- بدء النقل
+    local changes = 0
+    
+    -- 1. تغيير الخصائص
+    for prop, value in pairs(copiedData.properties) do
+        pcall(function()
+            if prop == "Name" then
+                targetTool.Name = value .. "_COPY"
+            else
+                targetTool[prop] = value
+            end
+            changes = changes + 1
+        end)
+    end
+    
+    -- 2. نقل الـ Attributes
+    for attr, value in pairs(copiedData.attributes) do
+        pcall(function()
+            targetTool:SetAttribute(attr, value)
+            changes = changes + 1
+        end)
+    end
+    
+    -- 3. محاولة إضافة السكربتات
+    for _, scriptData in ipairs(copiedData.scripts) do
+        pcall(function()
+            local newScript
+            if scriptData.class == "LocalScript" then
+                newScript = Instance.new("LocalScript")
+            else
+                newScript = Instance.new("Script")
+            end
+            
+            newScript.Name = scriptData.name .. "_COPY"
+            newScript.Source = scriptData.source
+            newScript.Disabled = true
+            newScript.Parent = targetTool
+            changes = changes + 1
+        end)
+    end
+    
+    return true, "✅ تم النقل! (" .. changes .. " تغيير)"
 end
 
 -- ============================================
--- 📱 واجهة التحكم
+-- 📱 واجهة الهاتف
 -- ============================================
 
-local transformUI = Instance.new("ScreenGui")
-transformUI.Name = "FruitTransformerUI"
-transformUI.ResetOnSpawn = false
+local ui = Instance.new("ScreenGui")
+ui.Name = "ToolCopyPaste"
+ui.ResetOnSpawn = false
 
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0.4, 0, 0.35, 0)
-main.Position = UDim2.new(0.55, 0, 0.1, 0)
-main.BackgroundColor3 = Color3.fromRGB(20, 10, 30)
+main.Size = UDim2.new(0.35, 0, 0.45, 0)
+main.Position = UDim2.new(0.6, 0, 0.1, 0)
+main.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
 main.Active = true
-main.Draggable = true
+main.Draggable = true -- تحريك بالإصبع
 
--- اختيار الفاكهة
-local weakLabel = Instance.new("TextLabel")
-weakLabel.Text = "الفاكهة السيئة: " .. FruitTransformer.weakFruit
-weakLabel.Size = UDim2.new(0.9, 0, 0.1, 0)
-weakLabel.Position = UDim2.new(0.05, 0, 0.05, 0)
+-- العنوان
+local title = Instance.new("TextLabel")
+title.Text = "🔄 نسخ ولصق الأدوات"
+title.Size = UDim2.new(1, 0, 0.1, 0)
+title.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+title.TextColor3 = Color3.new(1, 1, 1)
 
-local strongLabel = Instance.new("TextLabel")
-strongLabel.Text = "الفاكهة القوية: " .. FruitTransformer.strongFruit
-strongLabel.Size = UDim2.new(0.9, 0, 0.1, 0)
-strongLabel.Position = UDim2.new(0.05, 0, 0.17, 0)
+-- زر 1: نسخ من الأداة
+local btnCopy = Instance.new("TextButton")
+btnCopy.Text = "1️⃣ نسخ من الأداة"
+btnCopy.Size = UDim2.new(0.9, 0, 0.2, 0)
+btnCopy.Position = UDim2.new(0.05, 0, 0.15, 0)
+btnCopy.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+btnCopy.TextColor3 = Color3.new(1, 1, 1)
 
--- زر البحث عن ترقية
-local findUpgradeBtn = Instance.new("TextButton")
-findUpgradeBtn.Text = "🔍 إيجاد ترقية"
-findUpgradeBtn.Size = UDim2.new(0.9, 0, 0.1, 0)
-findUpgradeBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
-findUpgradeBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+-- زر 2: نسخ للحافظة
+local btnClipboard = Instance.new("TextButton")
+btnClipboard.Text = "2️⃣ نسخ للحافظة"
+btnClipboard.Size = UDim2.new(0.9, 0, 0.2, 0)
+btnClipboard.Position = UDim2.new(0.05, 0, 0.4, 0)
+btnClipboard.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+btnClipboard.TextColor3 = Color3.new(1, 1, 1)
 
--- زر التحويل الأساسي
-local transformBtn = Instance.new("TextButton")
-transformBtn.Text = "🔄 تحويل أثناء النقل"
-transformBtn.Size = UDim2.new(0.9, 0, 0.15, 0)
-transformBtn.Position = UDim2.new(0.05, 0, 0.43, 0)
-transformBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
+-- زر 3: نقل لأداة تانيه
+local btnPaste = Instance.new("TextButton")
+btnPaste.Text = "3️⃣ نقل لأداة تانيه"
+btnPaste.Size = UDim2.new(0.9, 0, 0.2, 0)
+btnPaste.Position = UDim2.new(0.05, 0, 0.65, 0)
+btnPaste.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+btnPaste.TextColor3 = Color3.new(1, 1, 1)
 
--- زر حقن الباكيتات
-local injectBtn = Instance.new("TextButton")
-injectBtn.Text = "💉 حقن باكيتات"
-injectBtn.Size = UDim2.new(0.9, 0, 0.15, 0)
-injectBtn.Position = UDim2.new(0.05, 0, 0.61, 0)
-injectBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 255)
+-- حالة النسخ
+local status = Instance.new("TextLabel")
+status.Text = "ضع أداة في إيدك واضغط 1️⃣"
+status.Size = UDim2.new(0.9, 0, 0.2, 0)
+status.Position = UDim2.new(0.05, 0, 0.88, 0)
+status.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+status.TextColor3 = Color3.new(1, 1, 1)
+status.TextWrapped = true
 
--- إضافة العناصر
-weakLabel.Parent = main
-strongLabel.Parent = main
-findUpgradeBtn.Parent = main
-transformBtn.Parent = main
-injectBtn.Parent = main
-main.Parent = transformUI
-transformUI.Parent = gui
-
--- الأحداث
-findUpgradeBtn.MouseButton1Click:Connect(function()
-    local upgrade = FruitTransformer:findUpgrade(FruitTransformer.weakFruit)
-    FruitTransformer.strongFruit = upgrade
-    strongLabel.Text = "الفاكهة القوية: " .. upgrade
+-- أحداث الأزرار
+btnCopy.MouseButton1Click:Connect(function()
+    btnCopy.Text = "⏳ جاري النسخ..."
+    local success, message = copyEverythingFromTool()
+    status.Text = message
+    btnCopy.Text = "1️⃣ نسخ من الأداة"
 end)
 
-transformBtn.MouseButton1Click:Connect(function()
-    transformBtn.Text = "⚡ جاري التحويل..."
-    task.spawn(function()
-        executeFruitTransformation()
-        task.wait(3)
-        transformBtn.Text = "🔄 تحويل أثناء النقل"
-    end)
+btnClipboard.MouseButton1Click:Connect(function()
+    btnClipboard.Text = "⏳ جاري النسخ..."
+    local success, message = copyToClipboard()
+    status.Text = message
+    task.wait(1)
+    btnClipboard.Text = "2️⃣ نسخ للحافظة"
 end)
 
-injectBtn.MouseButton1Click:Connect(function()
-    injectBtn.Text = "💉 جاري الحقن..."
-    task.spawn(function()
-        packetInjectionTransformation()
-        memoryRewrite()
-        task.wait(2)
-        injectBtn.Text = "💉 حقن باكيتات"
-    end)
+btnPaste.MouseButton1Click:Connect(function()
+    btnPaste.Text = "⚡ جاري النقل..."
+    local success, message = pasteToOtherTool()
+    status.Text = message
+    btnPaste.Text = "3️⃣ نقل لأداة تانيه"
 end)
 
-print([[
-    
-🔄 FRUIT TRANSFORMATION EXPLOIT:
+-- تجميع الواجهة
+title.Parent = main
+btnCopy.Parent = main
+btnClipboard.Parent = main
+btnPaste.Parent = main
+status.Parent = main
+main.Parent = ui
+ui.Parent = gui
 
-الفكرة: تغيير الفاكهة أثناء نقلها من الباك باك للإنفنتوري
-
-🎯 الخطوات:
-1. اختار فاكهة سيئة من الباك باك
-2. اضغط زر النقل
-3. أثناء النقل، نغير بيانات الفاكهة
-4. النظام هيحسب إنك نقلت فاكهة قوية
-
-💡 النصيحة: ابدأ بفاكهة سيئة عندك
-            وحولها لأقوى فاكهة!
-
-]])
+print("🎯 TOOL COPY-PASTE SYSTEM")
+print("📱 Mobile Version - Ready")
+print("1️⃣ نسخ من الأداة في إيدك")
+print("2️⃣ نسخ البيانات للحافظة")
+print("3️⃣ نقل البيانات لأداة تانيه")
