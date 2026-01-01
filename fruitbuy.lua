@@ -1,168 +1,262 @@
--- 🍭 CANDY BYPASS EXPLOIT
+-- 💣 SYSTEM VALIDATION DESTROYER
 -- Mobile Version
+-- loadstring(game:HttpGet("YOUR_GITHUB_URL"))()
 
 local plr = game.Players.LocalPlayer
+local rs = game:GetService("ReplicatedStorage")
 local gui = plr.PlayerGui
 
--- إيجاد زر الشراء
+-- 🔍 إيجاد زر الشراء
 local purchaseBtn = gui:WaitForChild("GachaWindow"):WaitForChild("HolidayGacha25")
     :WaitForChild("FreeToPlay"):WaitForChild("MainGachaUI")
     :WaitForChild("Main"):WaitForChild("Footer"):WaitForChild("PurchaseButton")
 
-print("🎯 زر الشراء موجود - يطلب 100 Candy")
+print("🎯 هدفنا: تدمير تحقق الـ 100 Candy")
 
--- نظام الـ Candy Bypass
-local CandyExploit = {
-    active = false,
-    fakeCandyAmount = 999999,
+-- نظام تدمير التحقق
+local ValidationDestroyer = {
+    destroyed = false,
     
-    -- 1. تلاعب بالكلاينت
-    manipulateClient = function(self)
-        -- البحث عن الـ Candy في الكلاينت
-        local stats = plr:FindFirstChild("leaderstats")
-        if stats then
-            for _, stat in pairs(stats:GetChildren()) do
-                local name = stat.Name:lower()
-                if name:find("candy") or name:find("christmas") then
-                    pcall(function()
-                        stat.Value = self.fakeCandyAmount
-                        print("💰 عُدلت الـ Candy إلى: " .. stat.Value)
-                    end)
+    -- 1. تعطيل جميع RemoteFunctions للتحقق
+    disableValidationFunctions = function(self)
+        print("💀 جاري تعطيل functions التحقق...")
+        
+        local disabled = 0
+        for _, obj in pairs(rs:GetDescendants()) do
+            if obj:IsA("RemoteFunction") then
+                local name = obj.Name:lower()
+                
+                -- إذا كان function للتحقق
+                if name:find("check") or name:find("validate") or 
+                   name:find("verify") or name:find("can") then
+                    
+                    -- استبدال الوظيفة
+                    local originalInvoke = obj.InvokeServer
+                    obj.InvokeServer = function(self, ...)
+                        local args = {...}
+                        
+                        -- إذا كان يتحقق من شراء أو Candy
+                        if type(args[1]) == "string" then
+                            if args[1]:find("candy") or args[1]:find("purchase") or 
+                               args[1]:find("buy") or args[1]:find("cost") then
+                                
+                                print("✅ عُطل تحقق: " .. args[1])
+                                return {
+                                    success = true,
+                                    canProceed = true,
+                                    hasEnough = true,
+                                    required = 0,
+                                    current = 999999
+                                }
+                            end
+                        end
+                        
+                        return originalInvoke(self, ...)
+                    end
+                    
+                    disabled = disabled + 1
                 end
             end
         end
+        
+        print("✅ عُطلت " .. disabled .. " function للتحقق")
     end,
     
-    -- 2. تخطي التحقق
-    bypassCheck = function(self)
-        -- تعطيل الوظيفة الأصلية
+    -- 2. إيقاف RemoteEvents للتحقق
+    stopValidationEvents = function(self)
+        print("💀 جاري إيقاف events التحقق...")
+        
+        local stopped = 0
+        for _, obj in pairs(rs:GetDescendants()) do
+            if obj:IsA("RemoteEvent") then
+                local name = obj.Name:lower()
+                
+                -- إذا كان event للتحقق قبل الشراء
+                if name:find("validate") or name:find("check") or 
+                   name:find("beforepurchase") or name:find("verify") then
+                    
+                    -- استبدال الوظيفة
+                    local originalFire = obj.FireServer
+                    obj.FireServer = function(self, ...)
+                        local args = {...}
+                        
+                        -- إذا كان تحقق قبل شراء
+                        if type(args[1]) == "table" and args[1].action then
+                            local action = args[1].action:lower()
+                            if action:find("check") or action:find("validate") then
+                                print("✅ منع تحقق: " .. action)
+                                return  -- لا ترسل للخادم
+                            end
+                        end
+                        
+                        return originalFire(self, ...)
+                    end
+                    
+                    stopped = stopped + 1
+                end
+            end
+        end
+        
+        print("✅ أوقفت " .. stopped .. " event للتحقق")
+    end,
+    
+    -- 3. اختطاف زر الشراء
+    hijackPurchaseButton = function(self)
+        print("🎯 جاري اختطاف زر الشراء...")
+        
+        -- تعطيل جميع الروابط
         local connections = getconnections(purchaseBtn.MouseButton1Click)
         for _, conn in pairs(connections) do
             conn:Disable()
         end
         
-        -- وظيفة جديدة
+        -- وظيفة جديدة قوية
         purchaseBtn.MouseButton1Click:Connect(function()
-            print("💥 تم الضغط - تجاوز تحقق الـ Candy")
+            print("💣 زر الشراء تم اختطافه!")
             
-            -- إرسال شراء مزيف
-            self:sendFakePurchase()
+            -- إرسال شراء مباشر بدون تحقق
+            self:sendDirectPurchase()
         end)
+        
+        -- تغيير مظهر الزر
+        purchaseBtn.Text = "💣 FORCE BUY"
+        purchaseBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     end,
     
-    -- 3. إرسال شراء مزيف
-    sendFakePurchase = function(self)
-        local rs = game:GetService("ReplicatedStorage")
+    -- 4. إرسال شراء قسري
+    sendDirectPurchase = function(self)
+        print("🚀 إرسال شراء قسري...")
         
-        -- بيانات الشراء المزيفة
-        local purchaseData = {
-            action = "purchase_spin",
-            cost = 100,
-            candyBefore = self.fakeCandyAmount,
-            candyAfter = self.fakeCandyAmount - 100,
-            success = true,
+        -- بيانات الشراء القسري
+        local forcedPurchase = {
+            action = "force_purchase",
+            item = "GACHA_SPIN",
+            cost = 0,  -- مجاني
+            bypass = true,
+            validation = "DISABLED",
             player = plr.Name,
-            timestamp = os.time()
+            timestamp = os.time(),
+            receipt = "FORCED_PURCHASE_" .. math.random(100000, 999999)
         }
         
-        -- البحث عن Remote المناسب
-        local found = false
-        
-        -- المحاولة 1: البحث بالاسم
-        local targetNames = {"GachaPurchase", "BuySpin", "PurchaseSpin", "HolidayPurchase"}
-        for _, name in pairs(targetNames) do
-            local remote = rs:FindFirstChild(name)
-            if remote and remote:IsA("RemoteEvent") then
-                remote:FireServer(purchaseData)
-                print("🎯 أرسل لـ: " .. name)
-                found = true
-            end
-        end
-        
-        -- المحاولة 2: البحث في كل الـ Remotes
-        if not found then
-            for _, remote in pairs(rs:GetDescendants()) do
-                if remote:IsA("RemoteEvent") then
-                    local rName = remote.Name:lower()
-                    if rName:find("purchase") or rName:find("buy") or rName:find("gacha") then
-                        remote:FireServer(purchaseData)
-                        print("🎯 أرسل لـ: " .. remote.Name)
-                    end
+        -- أرسل لكل الـ Remotes
+        local sent = 0
+        for _, obj in pairs(rs:GetDescendants()) do
+            if obj:IsA("RemoteEvent") then
+                local name = obj.Name:lower()
+                
+                -- إذا كان مرتبط بالشراء أو الغاتشا
+                if name:find("purchase") or name:find("buy") or 
+                   name:find("gacha") or name:find("shop") then
+                    
+                    pcall(function()
+                        obj:FireServer(forcedPurchase)
+                        obj:FireServer("BUY_FORCE")
+                        obj:FireServer("PURCHASE_FORCE")
+                        sent = sent + 1
+                    end)
                 end
             end
         end
+        
+        -- إذا ما فيش remotes، أرسل لكل حاجة
+        if sent == 0 then
+            for _, obj in pairs(rs:GetDescendants()) do
+                if obj:IsA("RemoteEvent") then
+                    pcall(function()
+                        obj:FireServer(forcedPurchase)
+                        sent = sent + 1
+                    end)
+                end
+            end
+        end
+        
+        print("✅ أرسل " .. sent .. " طلب شراء قسري")
     end,
     
-    -- 4. تشغيل النظام
-    activate = function(self)
-        if self.active then return end
+    -- 5. تشغيل التدمير الكامل
+    activateNuclearOption = function(self)
+        if self.destroyed then return end
         
-        self.active = true
-        print("🚀 تفعيل نظام تجاوز الـ Candy...")
+        print("💣 تفعيل خيار تدمير التحقق...")
         
-        self:manipulateClient()
-        self:bypassCheck()
+        self:disableValidationFunctions()
+        task.wait(0.5)
         
-        -- تغيير مظهر الزر
-        purchaseBtn.Text = "🎁 FREE SPIN"
-        purchaseBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        self:stopValidationEvents()
+        task.wait(0.5)
         
-        print("✅ النظام مفعل! اضغط على الزر!")
+        self:hijackPurchaseButton()
+        
+        self.destroyed = true
+        
+        print("✅ نظام التحقق تم تدميره!")
     end
 }
 
--- واجهة التحكم
+-- 📱 واجهة التدمير
 local ui = Instance.new("ScreenGui")
-ui.Name = "CandyBypassUI"
+ui.Name = "ValidationDestroyer"
 ui.ResetOnSpawn = false
 
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0.35, 0, 0.2, 0)
-main.Position = UDim2.new(0.6, 0, 0.05, 0)
-main.BackgroundColor3 = Color3.fromRGB(50, 30, 30)
+main.Size = UDim2.new(0.4, 0, 0.25, 0)
+main.Position = UDim2.new(0.55, 0, 0.1, 0)
+main.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
 main.Active = true
 main.Draggable = true
 
 local title = Instance.new("TextLabel")
-title.Text = "🍭 CANDY BYPASS"
+title.Text = "💣 VALIDATION DESTROYER"
 title.Size = UDim2.new(1, 0, 0.25, 0)
-title.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+title.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+title.TextColor3 = Color3.new(1, 1, 1)
 
-local activateBtn = Instance.new("TextButton")
-activateBtn.Text = "⚡ تفعيل النظام"
-activateBtn.Size = UDim2.new(0.9, 0, 0.5, 0)
-activateBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
-activateBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+local nukeBtn = Instance.new("TextButton")
+nukeBtn.Text = "💥 تدمير نظام التحقق"
+nukeBtn.Size = UDim2.new(0.9, 0, 0.5, 0)
+nukeBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
+nukeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+nukeBtn.TextColor3 = Color3.new(1, 1, 1)
 
 local status = Instance.new("TextLabel")
-status.Text = "الزر يطلب 100 Candy\nتفعيل النظام للتجاوز"
-status.Size = UDim2.new(0.9, 0, 0.25, 0)
+status.Text = "النظام: 🟢 جاهز للتدمير\nالزر يطلب: 100 Candy"
+status.Size = UDim2.new(0.9, 0, 0.2, 0)
 status.Position = UDim2.new(0.05, 0, 0.85, 0)
-status.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+status.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+status.TextColor3 = Color3.new(1, 1, 1)
 status.TextWrapped = true
 
--- حدث التفعيل
-activateBtn.MouseButton1Click:Connect(function()
-    activateBtn.Text = "⚡ جاري..."
-    status.Text = "يتجاوز شرط 100 Candy..."
+-- حدث التدمير
+nukeBtn.MouseButton1Click:Connect(function()
+    nukeBtn.Text = "💀 جاري التدمير..."
+    status.Text = "💣 يعطل التحقق والـ Validation..."
     
     task.spawn(function()
-        CandyExploit:activate()
+        ValidationDestroyer:activateNuclearOption()
         
-        task.wait(1)
-        activateBtn.Text = "✅ تم التفعيل"
-        activateBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        status.Text = "✅ النظام مفعل!\nاضغط على PurchaseButton!"
+        task.wait(2)
+        nukeBtn.Text = "✅ تم التدمير"
+        nukeBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        status.Text = "✅ النظام دُمّر!\nاضغط على PurchaseButton!"
+        
+        -- تغيير زر الشراء الأصلي
+        if purchaseBtn then
+            purchaseBtn.Text = "💣 FORCE BUY"
+        end
     end)
 end)
 
 -- التجميع
 title.Parent = main
-activateBtn.Parent = main
+nukeBtn.Parent = main
 status.Parent = main
 main.Parent = ui
 ui.Parent = gui
 
-print("🍭 CANDY BYPASS SYSTEM READY!")
-print("🎯 الزر يطلب: 100 Candy")
-print("💥 النظام هيجاوز هذا الشرط")
+print("💣 VALIDATION DESTROYER - READY!")
+print("🎯 الهدف: تدمير تحقق الـ 100 Candy")
+print("💀 يعطل RemoteFunctions")
+print("🛑 يوقف RemoteEvents")
+print("💣 يختطف زر الشراء")
+print("🚀 يرسل شراء قسري")
